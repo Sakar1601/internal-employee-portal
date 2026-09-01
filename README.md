@@ -49,6 +49,7 @@ scripts/04-awx-up.sh               # k3d + AWX, cross-network wiring
 source secrets/ansible-approle.env
 ansible-playbook -i "$(terraform -chdir=terraform output -raw portal_public_ip)," \
   ansible/site.yml \
+  --private-key secrets/portal-lab-ssh-key -u ec2-user \
   -e vault_role_id=$ANSIBLE_ROLE_ID -e vault_secret_id=$ANSIBLE_SECRET_ID \
   -e db_host=$(terraform -chdir=terraform output -raw rds_endpoint)
 

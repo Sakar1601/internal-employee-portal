@@ -50,6 +50,13 @@ if [ -z "${TF_VAR_db_master_password:-}" ]; then
   echo "    Saved to secrets/rds-master-password.txt (gitignored) — Vault uses this once, below."
 fi
 
+if [ ! -f ../secrets/portal-lab-ssh-key.pub ]; then
+  echo "==> No SSH key pair found — generating one for the portal instance."
+  ssh-keygen -t ed25519 -f ../secrets/portal-lab-ssh-key -N "" -C "portal-lab@internal-employee-portal"
+  chmod 600 ../secrets/portal-lab-ssh-key
+  echo "    Saved to secrets/portal-lab-ssh-key(.pub) (gitignored) — this is how Ansible reaches the instance."
+fi
+
 echo "==> terraform init (watch the output — this should resolve from the local mirror only)"
 terraform init
 
