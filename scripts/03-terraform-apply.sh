@@ -4,11 +4,11 @@
 # secrets engine now that the RDS endpoint actually exists.
 set -euo pipefail
 
-MIRROR_DIR="/opt/terraform-mirror"
+MIRROR_DIR="${TF_MIRROR_DIR:-$HOME/.cache/airgap-lab/terraform-mirror}"
 MIRROR_SRC="/tmp/mirror-src"
 
 if [ ! -d "$MIRROR_DIR" ]; then
-  echo "==> Populating the provider mirror at $MIRROR_DIR (needs sudo)..."
+  echo "==> Populating the provider mirror at $MIRROR_DIR..."
   mkdir -p "$MIRROR_SRC" && cd "$MIRROR_SRC"
   cat > main.tf <<'TFEOF'
 terraform {
@@ -18,8 +18,7 @@ terraform {
 }
 TFEOF
   terraform init
-  sudo mkdir -p "$MIRROR_DIR"
-  sudo chown "$(whoami)" "$MIRROR_DIR"
+  mkdir -p "$MIRROR_DIR"
   terraform providers mirror "$MIRROR_DIR"
   cd -
 else
