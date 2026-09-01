@@ -32,6 +32,9 @@
   community.hashi_vault.vault_write:
     url: "{{ vault_addr }}"
     path: "pki/issue/lab-internal"
+    auth_method: approle
+    role_id: "{{ vault_role_id }}"
+    secret_id: "{{ vault_secret_id }}"
     data:
       common_name: "{{ inventory_hostname }}.lab.internal"
   delegate_to: localhost
