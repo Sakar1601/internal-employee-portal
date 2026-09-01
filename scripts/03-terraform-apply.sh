@@ -107,7 +107,7 @@ vault write database/config/portal-postgres \
   username="postgres" \
   password="${TF_VAR_db_master_password}"
 vault write database/roles/app-role db_name=portal-postgres \
-  creation_statements="CREATE ROLE \"{{name}}\" WITH LOGIN PASSWORD '{{password}}' VALID UNTIL '{{expiration}}';" \
+  creation_statements="CREATE ROLE \"{{name}}\" WITH LOGIN PASSWORD '{{password}}' VALID UNTIL '{{expiration}}'; GRANT CREATE, USAGE ON SCHEMA public TO \"{{name}}\";" \
   default_ttl="1h" max_ttl="24h"
 
 echo "==> Proving it works — issuing a real dynamic credential against real RDS:"

@@ -33,7 +33,11 @@ def h(hf, msg):
 
 
 def xor(bytes1, bytes2):
-    return bytes(a ^ b for a, b in zip(bytes1, bytes2, strict=True))
+    # zip()'s strict= kwarg needs Python 3.10+; the target runs 3.9.
+    # Equivalent length check kept explicit rather than dropped silently.
+    if len(bytes1) != len(bytes2):
+        raise ValueError("bytes1 and bytes2 must be of equal length")
+    return bytes(a ^ b for a, b in zip(bytes1, bytes2))
 
 
 def b64enc(binary):
