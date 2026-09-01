@@ -2,6 +2,15 @@
 # Tears everything down in an order that avoids orphaned AWS spend.
 set -euo pipefail
 
+echo "==> Closing the RDS SSH tunnel (opened by scripts/03 so Vault, on your"
+echo "    laptop, could reach RDS through the portal EC2 instance)..."
+if [ -f secrets/rds-tunnel.pid ]; then
+  kill "$(cat secrets/rds-tunnel.pid)" 2>/dev/null || echo "    (already gone)"
+  rm -f secrets/rds-tunnel.pid
+else
+  pkill -f "15432:portal-lab-db" 2>/dev/null || echo "    (none found)"
+fi
+
 echo "==> Destroying Terraform-managed AWS resources..."
 if [ -f terraform/terraform.tfstate ] || [ -f terraform/.terraform/terraform.tfstate ]; then
   (cd terraform && terraform destroy)

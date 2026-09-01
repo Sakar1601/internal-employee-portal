@@ -81,14 +81,28 @@ RDS_ENDPOINT=$(terraform output -raw rds_endpoint)
 PORTAL_IP=$(terraform output -raw portal_public_ip)
 cd ..
 
-echo "==> RDS is up at ${RDS_ENDPOINT} — configuring Vault's database secrets engine..."
+echo "==> RDS is up at ${RDS_ENDPOINT}."
+echo "    RDS has no route from your laptop at all (private subnets, no IGW —"
+echo "    by design). vault-main can't reach it directly either. Opening an"
+echo "    SSH tunnel through the portal EC2 instance, which IS in the VPC and"
+echo "    can reach RDS, so Vault (in Docker) can reach it via host.docker.internal."
+
+pkill -f "15432:${RDS_ENDPOINT}" 2>/dev/null || true
+ssh -o StrictHostKeyChecking=accept-new -i secrets/portal-lab-ssh-key \
+  -f -N -L "15432:${RDS_ENDPOINT}:5432" "ec2-user@${PORTAL_IP}"
+echo "$(pgrep -f "15432:${RDS_ENDPOINT}" | head -1)" > secrets/rds-tunnel.pid
+echo "    Tunnel PID saved to secrets/rds-tunnel.pid — scripts/99-teardown.sh kills it."
+echo "    This tunnel must stay running for as long as Vault needs to reach RDS"
+echo "    (i.e. for the rest of this lab session, including the Ansible deploy)."
+
+echo "==> Configuring Vault's database secrets engine..."
 export VAULT_ADDR=http://localhost:8200
 export VAULT_TOKEN=$(jq -r '.root_token' secrets/main-cluster-keys.json)
 
 vault secrets enable database || true
 vault write database/config/portal-postgres \
   plugin_name=postgresql-database-plugin \
-  connection_url="postgresql://{{username}}:{{password}}@${RDS_ENDPOINT}:5432/portal?sslmode=require" \
+  connection_url="postgresql://{{username}}:{{password}}@host.docker.internal:15432/portal?sslmode=require" \
   allowed_roles="app-role" \
   username="postgres" \
   password="${TF_VAR_db_master_password}"

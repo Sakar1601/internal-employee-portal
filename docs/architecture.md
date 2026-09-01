@@ -75,7 +75,7 @@ reach anything outside the VPC. That's what makes "no live package
 installs" a network-enforced fact here, not a convention someone could
 accidentally violate.
 
-## Known limitation
+## Known limitations
 
 AWX's pods run inside k3d's own cluster network, separate from the
 `enclave-net` Docker network everything else is on. `scripts/04-awx-up.sh`
@@ -83,3 +83,17 @@ resolves this with `docker network connect` plus addressing services by
 container IP rather than name — the one place in this lab where the fix
 depends on your local Docker setup rather than being a single universal
 command.
+
+**Vault (on your laptop) can't reach RDS directly, on purpose.** RDS sits
+in private subnets with no internet gateway at all — not just a security
+group restriction, a genuine absence of any route from the public
+internet. `vault-main` runs in Docker on your laptop, which has no path
+into the VPC either. The portal EC2 instance, in the public subnet, does
+have a route to RDS (same VPC). `scripts/03-terraform-apply.sh` opens an
+SSH tunnel through that instance (`-L 15432:<rds-endpoint>:5432`) and
+points Vault's `connection_url` at `host.docker.internal:15432` so the
+Vault *container* can reach the tunnel bound on the host. That tunnel has
+to stay running for as long as Vault needs to issue new dynamic
+credentials — i.e. for the rest of the session, through the Ansible
+deploy. `scripts/99-teardown.sh` closes it via the PID saved to
+`secrets/rds-tunnel.pid`.
