@@ -45,7 +45,10 @@ fi
 
 if [ -z "${TF_VAR_db_master_password:-}" ]; then
   echo "==> No TF_VAR_db_master_password set — generating a random one."
-  export TF_VAR_db_master_password=$(openssl rand -base64 24)
+  # RDS rejects '/', '@', '"', and space in master passwords. base64 output
+  # can contain '/', so use hex instead — always RDS-safe, still 96 bits
+  # of entropy from 24 random bytes.
+  export TF_VAR_db_master_password=$(openssl rand -hex 24)
   echo "$TF_VAR_db_master_password" > ../secrets/rds-master-password.txt
   echo "    Saved to secrets/rds-master-password.txt (gitignored) — Vault uses this once, below."
 fi
