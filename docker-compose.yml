@@ -1,5 +1,3 @@
-version: "3.8"
-
 # Support services for the air-gapped-pattern IaC lab.
 # Everything here plays the role of an internal artifact/state/git layer,
 # standing in for what a real enclave would run (internal registry, internal
