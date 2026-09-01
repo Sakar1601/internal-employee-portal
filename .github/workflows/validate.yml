@@ -50,3 +50,27 @@ jobs:
 
       - name: ansible-lint
         run: ansible-lint infra/ansible/site.yml
+
+  backend-tests:
+    name: Backend tests
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: app/backend
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.9"
+
+      - name: Install dependencies
+        run: pip install -r requirements-dev.txt
+
+      - name: Run tests
+        env:
+          DATABASE_URL: "sqlite:///:memory:"
+          JWT_SECRET: "ci-test-secret"
+          ADMIN_USERNAME: "admin"
+          ADMIN_PASSWORD_HASH: "$2b$12$abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUV"
+        run: python -m pytest -v
