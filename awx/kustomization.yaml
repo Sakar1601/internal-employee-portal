@@ -8,3 +8,9 @@ resources:
 images:
   - name: quay.io/ansible/awx-operator
     newTag: 2.19.1
+  # gcr.io/kubebuilder/kube-rbac-proxy:v0.15.0 (the upstream manifest's
+  # default metrics-proxy sidecar) was removed from its registry entirely
+  # after kubebuilder migrated it — 404 on pull, not a local/network issue.
+  - name: gcr.io/kubebuilder/kube-rbac-proxy
+    newName: quay.io/brancz/kube-rbac-proxy
+    newTag: v0.18.0
