@@ -1,0 +1,4 @@
+.venv/
+wheelhouse/
+__pycache__/
+*.db
