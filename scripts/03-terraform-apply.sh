@@ -56,6 +56,7 @@ if [ ! -f ../secrets/portal-lab-ssh-key.pub ]; then
   chmod 600 ../secrets/portal-lab-ssh-key
   echo "    Saved to secrets/portal-lab-ssh-key(.pub) (gitignored) — this is how Ansible reaches the instance."
 fi
+export TF_VAR_portal_public_key=$(cat ../secrets/portal-lab-ssh-key.pub)
 
 echo "==> terraform init (watch the output — this should resolve from the local mirror only)"
 terraform init

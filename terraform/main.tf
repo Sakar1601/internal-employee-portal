@@ -112,7 +112,7 @@ resource "aws_security_group" "rds" {
 
 resource "aws_key_pair" "portal" {
   key_name   = "portal-lab-key"
-  public_key = file("${path.module}/../secrets/portal-lab-ssh-key.pub")
+  public_key = var.portal_public_key
 }
 
 resource "aws_instance" "portal" {
