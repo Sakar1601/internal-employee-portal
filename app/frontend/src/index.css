@@ -1,11 +1,20 @@
-:root {
-  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
-  line-height: 1.5;
-  font-weight: 400;
-  color-scheme: light;
-}
-
+* { box-sizing: border-box; }
 body {
+  font-family: -apple-system, BlinkMacSystemFont, sans-serif;
   margin: 0;
-  min-height: 100vh;
+  background: #f7f7f8;
+  color: #18181b;
 }
+.login-page { display: flex; align-items: center; justify-content: center; height: 100vh; }
+.login-page form { display: flex; flex-direction: column; gap: 10px; width: 280px; }
+.login-page input, .employee-form input { padding: 8px 10px; border: 1px solid #d4d4d8; border-radius: 6px; }
+.error { color: #dc2626; font-size: 13px; }
+.employees-page { max-width: 900px; margin: 40px auto; padding: 0 20px; }
+.employees-page header { display: flex; justify-content: space-between; align-items: center; }
+.toolbar { display: flex; justify-content: space-between; margin: 16px 0; }
+table { width: 100%; border-collapse: collapse; background: white; border-radius: 8px; overflow: hidden; }
+th, td { text-align: left; padding: 10px 12px; border-bottom: 1px solid #e5e5e8; }
+.modal { position: fixed; inset: 0; background: rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center; }
+.employee-form { background: white; padding: 24px; border-radius: 10px; display: flex; flex-direction: column; gap: 10px; width: 320px; }
+.form-actions { display: flex; gap: 8px; }
+button { cursor: pointer; padding: 6px 12px; border-radius: 6px; border: 1px solid #d4d4d8; background: white; }
