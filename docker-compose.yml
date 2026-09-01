@@ -58,7 +58,10 @@ services:
     volumes:
       - ./vault/vault-unseal.hcl:/vault/config/config.hcl:ro
       - vault-unseal-data:/vault/data
-    command: server -config=/vault/config/config.hcl
+    command: server  # the image's entrypoint already injects -config=/vault/config
+                      # (the dir config.hcl is bind-mounted into) — an explicit
+                      # -config= here double-loads the same file and duplicate-
+                      # binds the listener
     ports:
       - "8210:8200"
     networks: [enclave-net]
@@ -71,7 +74,10 @@ services:
     volumes:
       - ./vault/vault-main.hcl:/vault/config/config.hcl:ro
       - vault-main-data:/vault/data
-    command: server -config=/vault/config/config.hcl
+    command: server  # the image's entrypoint already injects -config=/vault/config
+                      # (the dir config.hcl is bind-mounted into) — an explicit
+                      # -config= here double-loads the same file and duplicate-
+                      # binds the listener
     ports:
       - "8200:8200"
     networks: [enclave-net]
