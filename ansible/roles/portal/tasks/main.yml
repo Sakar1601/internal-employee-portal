@@ -1,4 +1,16 @@
 ---
+# community.hashi_vault requires the hvac Python library on whatever runs
+# it -- neither AWX's default execution environment (quay.io/ansible/awx-ee)
+# nor its task image bundle it, so vault_read/vault_write fail on a bare
+# ModuleNotFoundError otherwise (masked by no_log, since Ansible censors
+# the whole task result, not just the parts that would leak a secret).
+- name: Ensure hvac is available on the control node for community.hashi_vault
+  ansible.builtin.pip:
+    name: hvac
+    extra_args: --user
+  delegate_to: localhost
+  become: false
+
 # These two tasks run on the control node, not the portal instance --
 # delegate_to: localhost is what actually makes that true. Without it,
 # Ansible executes the module over SSH on inventory_hostname like any
