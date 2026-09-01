@@ -59,12 +59,18 @@ flowchart LR
 ## Two things worth understanding precisely
 
 **Where `community.hashi_vault` tasks actually execute.** The `vault_read` /
-`vault_write` tasks in `ansible/roles/portal/tasks/main.yml` run via action
-plugins on the **control node** (wherever `ansible-playbook`/AWX's execution
-environment runs), not on the EC2 instance. That's *why* the EC2 instance
-never needs direct network access to Vault — only your laptop (or AWX's EE
-pod, connected to `enclave-net`) does. The instance only ever receives the
-already-fetched secrets, copied in as files.
+`vault_write` tasks in `ansible/roles/portal/tasks/main.yml` run on the
+**control node** (wherever `ansible-playbook`/AWX's execution environment
+runs), not on the EC2 instance — via an explicit `delegate_to: localhost`
+on both tasks, not automatically. That's *why* the EC2 instance never needs
+direct network access to Vault — only your laptop (or AWX's EE pod,
+connected to `enclave-net`) does. The instance only ever receives the
+already-fetched secrets, copied in as files. Without `delegate_to`, Ansible
+runs a module over SSH on `inventory_hostname` like any other task, which
+cannot work here at all: the portal instance's egress is locked to
+VPC-only, so it has no route to Vault regardless of what `vault_addr` says
+— it fails opaquely (`no_log: true` on these tasks masks the real error,
+by design, since it would otherwise print the AppRole secret/token).
 
 **Why egress is locked to the VPC CIDR, not "no route at all."** RDS lives
 in private subnets with genuinely no route to the internet. The EC2 instance

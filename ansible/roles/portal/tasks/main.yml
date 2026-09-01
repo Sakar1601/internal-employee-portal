@@ -1,4 +1,9 @@
 ---
+# These two tasks run on the control node, not the portal instance --
+# delegate_to: localhost is what actually makes that true. Without it,
+# Ansible executes the module over SSH on inventory_hostname like any
+# other task, which cannot work here: the portal instance's egress is
+# locked to VPC-only, so it has no route to Vault at all, by design.
 - name: Fetch a short-lived database credential from Vault
   community.hashi_vault.vault_read:
     url: "{{ vault_addr }}"
@@ -6,6 +11,8 @@
     auth_method: approle
     role_id: "{{ vault_role_id }}"
     secret_id: "{{ vault_secret_id }}"
+  delegate_to: localhost
+  become: false
   register: portal_db_creds_result
   no_log: true # the credential itself must never hit the job log
 
@@ -15,6 +22,8 @@
     path: "pki/issue/lab-internal"
     data:
       common_name: "{{ inventory_hostname }}.lab.internal"
+  delegate_to: localhost
+  become: false
   register: portal_issued_cert
   no_log: true
 
