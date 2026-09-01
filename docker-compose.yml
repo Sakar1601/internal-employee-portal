@@ -57,7 +57,7 @@ services:
     cap_add: [IPC_LOCK]
     volumes:
       - ./vault/vault-unseal.hcl:/vault/config/config.hcl:ro
-      - vault-unseal-data:/vault/data
+      - vault-unseal-data:/vault/file
     command: server  # the image's entrypoint already injects -config=/vault/config
                       # (the dir config.hcl is bind-mounted into) — an explicit
                       # -config= here double-loads the same file and duplicate-
@@ -73,7 +73,7 @@ services:
     cap_add: [IPC_LOCK]
     volumes:
       - ./vault/vault-main.hcl:/vault/config/config.hcl:ro
-      - vault-main-data:/vault/data
+      - vault-main-data:/vault/file
     command: server  # the image's entrypoint already injects -config=/vault/config
                       # (the dir config.hcl is bind-mounted into) — an explicit
                       # -config= here double-loads the same file and duplicate-

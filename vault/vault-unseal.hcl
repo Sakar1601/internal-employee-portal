@@ -1,5 +1,7 @@
 storage "file" {
-  path = "/vault/data"
+  path = "/vault/file"  # the image's built-in dir, owned by the vault user at build
+                         # time — a custom path here would sit on a fresh Docker
+                         # volume owned by root, which the vault user can't write to
 }
 
 listener "tcp" {
