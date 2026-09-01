@@ -12,7 +12,7 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: terraform
+        working-directory: infra/terraform
     steps:
       - uses: actions/checkout@v4
 
@@ -43,10 +43,10 @@ jobs:
         run: pip install ansible-core ansible-lint
 
       - name: Install required collections
-        run: ansible-galaxy collection install -r ansible/requirements.yml
+        run: ansible-galaxy collection install -r infra/ansible/requirements.yml
 
       - name: Syntax check
-        run: ansible-playbook --syntax-check ansible/site.yml
+        run: ansible-playbook --syntax-check infra/ansible/site.yml
 
       - name: ansible-lint
-        run: ansible-lint ansible/site.yml
+        run: ansible-lint infra/ansible/site.yml

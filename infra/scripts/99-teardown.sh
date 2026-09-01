@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
 # Tears everything down in an order that avoids orphaned AWS spend.
 set -euo pipefail
+cd "$(dirname "${BASH_SOURCE[0]}")/../.."
 
-echo "==> Closing the RDS SSH tunnel (opened by scripts/03 so Vault, on your"
+echo "==> Closing the RDS SSH tunnel (opened by infra/scripts/03 so Vault, on your"
 echo "    laptop, could reach RDS through the portal EC2 instance)..."
 if [ -f secrets/rds-tunnel.pid ]; then
   kill "$(cat secrets/rds-tunnel.pid)" 2>/dev/null || echo "    (already gone)"
@@ -12,8 +13,8 @@ else
 fi
 
 echo "==> Destroying Terraform-managed AWS resources..."
-if [ -f terraform/terraform.tfstate ] || [ -f terraform/.terraform/terraform.tfstate ]; then
-  (cd terraform && terraform destroy)
+if [ -f infra/terraform/terraform.tfstate ] || [ -f infra/terraform/.terraform/terraform.tfstate ]; then
+  (cd infra/terraform && terraform destroy)
 fi
 
 echo "==> Verifying nothing billable is still running..."
@@ -32,7 +33,7 @@ echo "==> Deleting the k3d cluster..."
 k3d cluster delete awx-lab 2>/dev/null || echo "    (already gone)"
 
 echo "==> Stopping Docker Compose services..."
-docker compose --profile main down -v
+docker compose -f infra/docker-compose.yml --profile main down -v
 
 echo ""
 echo "Teardown complete. Double-check the AWS Billing dashboard once,"

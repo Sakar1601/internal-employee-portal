@@ -1,14 +1,15 @@
 #!/usr/bin/env bash
 # Brings up everything except vault-main (needs a token from Vault bootstrap
 # first) and Postgres (it's real AWS RDS now, created in Phase 03 — see
-# docs/architecture.md for why local Docker Postgres wouldn't actually work).
+# infra/docs/architecture.md for why local Docker Postgres wouldn't actually work).
 set -euo pipefail
+cd "$(dirname "${BASH_SOURCE[0]}")/../.."
 
 echo "==> Starting registry, minio, gitea, vault-unseal..."
-docker compose up -d registry minio gitea vault-unseal
+docker compose -f infra/docker-compose.yml up -d registry minio gitea vault-unseal
 
 echo "==> Waiting for minio to report healthy..."
-until docker compose ps minio --format json | grep -q '"Health":"healthy"'; do
+until docker compose -f infra/docker-compose.yml ps minio --format json | grep -q '"Health":"healthy"'; do
   sleep 2
 done
 
@@ -25,5 +26,5 @@ Services are up:
                                      "portal-terraform" and "portal-ansible" repos)
   vault-unseal -> localhost:8210   (not yet initialized)
 
-Next: ./scripts/02-bootstrap-vault.sh
+Next: ./infra/scripts/02-bootstrap-vault.sh
 EOF2

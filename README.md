@@ -33,34 +33,34 @@ app is real and demonstrable, not a client engagement.
   (`.github/workflows/validate.yml`).
 
 Full architecture, a diagram, and the reasoning behind two non-obvious
-design decisions: [`docs/architecture.md`](docs/architecture.md).
+design decisions: [`infra/docs/architecture.md`](infra/docs/architecture.md).
 
 ## Quick start
 
 ```bash
 git clone https://github.com/Sakar1601/internal-employee-portal.git && cd internal-employee-portal
 
-scripts/01-bring-up-services.sh    # registry, minio, gitea, vault-unseal
-scripts/02-bootstrap-vault.sh      # both Vault clusters, transit auto-unseal, PKI, AppRole
-scripts/03-terraform-apply.sh      # provider mirror, VPC/EC2/RDS, then wires Vault to real RDS
-scripts/04-awx-up.sh               # k3d + AWX, cross-network wiring
+infra/scripts/01-bring-up-services.sh    # registry, minio, gitea, vault-unseal
+infra/scripts/02-bootstrap-vault.sh      # both Vault clusters, transit auto-unseal, PKI, AppRole
+infra/scripts/03-terraform-apply.sh      # provider mirror, VPC/EC2/RDS, then wires Vault to real RDS
+infra/scripts/04-awx-up.sh               # k3d + AWX, cross-network wiring
 
 # deploy the app for real:
 source secrets/ansible-approle.env
-ansible-playbook -i "$(terraform -chdir=terraform output -raw portal_public_ip)," \
-  ansible/site.yml \
+ansible-playbook -i "$(terraform -chdir=infra/terraform output -raw portal_public_ip)," \
+  infra/ansible/site.yml \
   --private-key secrets/portal-lab-ssh-key -u ec2-user \
   -e vault_role_id=$ANSIBLE_ROLE_ID -e vault_secret_id=$ANSIBLE_SECRET_ID \
-  -e db_host=$(terraform -chdir=terraform output -raw rds_endpoint)
+  -e db_host=$(terraform -chdir=infra/terraform output -raw rds_endpoint)
 
 # then open https://<portal_public_ip>:8443/ — self-signed internal CA,
 # your browser will warn about it, that's expected and correct
 
-scripts/99-teardown.sh             # tears everything down, verifies nothing billable remains
+infra/scripts/99-teardown.sh             # tears everything down, verifies nothing billable remains
 ```
 
 Each script prints a checkpoint and what to run next.
-[`docs/architecture.md`](docs/architecture.md) covers what each piece is
+[`infra/docs/architecture.md`](infra/docs/architecture.md) covers what each piece is
 standing in for, plus two design decisions worth understanding precisely
 (where Vault-integration tasks actually execute, and how egress is locked
 down without literally cutting the route).
@@ -68,12 +68,14 @@ down without literally cutting the route).
 ## Project structure
 
 ```
-terraform/       VPC (public + private subnets), EC2, RDS — MinIO backend
-ansible/          site.yml + a role that deploys a real app and fetches its secrets from Vault
-vault/            Vault configs for both clusters (vault-main.hcl is generated, not committed)
-awx/               kustomize + AWX custom resource for the k3d install
-scripts/           the actual runbook, one script per phase
-docs/              architecture explanation + diagram
+infra/             all infrastructure-as-code and lab automation
+  terraform/       VPC (public + private subnets), EC2, RDS — MinIO backend
+  ansible/         site.yml + a role that deploys a real app and fetches its secrets from Vault
+  vault/           Vault configs for both clusters (vault-main.hcl is generated, not committed)
+  awx/             kustomize + AWX custom resource for the k3d install
+  scripts/         the actual runbook, one script per phase
+  docs/            architecture explanation + diagram
+  docker-compose.yml
 .github/workflows/ CI: terraform validate, ansible-lint
 ```
 
@@ -88,6 +90,6 @@ docs/              architecture explanation + diagram
 ## Cost
 
 RDS `db.t3.micro` (750 hrs/month, 20GB) and EC2 `t2.micro` are both
-free-tier eligible for 12 months. `scripts/99-teardown.sh` destroys
+free-tier eligible for 12 months. `infra/scripts/99-teardown.sh` destroys
 everything and verifies via the AWS CLI that neither is still running —
 check the AWS Billing dashboard once after your first apply regardless.

@@ -82,7 +82,7 @@ services:
     depends_on: [vault-unseal]
     restart: unless-stopped
     profiles: ["main"]  # NOT started by a plain `docker compose up -d` —
-                         # see scripts/02-bootstrap-vault.sh. vault-main.hcl
+                         # see infra/scripts/02-bootstrap-vault.sh. vault-main.hcl
                          # needs a real transit token written into it first,
                          # which only exists after vault-unseal is bootstrapped.
 

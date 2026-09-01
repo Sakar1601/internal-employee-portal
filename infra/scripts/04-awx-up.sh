@@ -1,18 +1,19 @@
 #!/usr/bin/env bash
 # Brings up AWX in a k3d cluster and connects it to the same Docker network
-# as Vault/Gitea/etc — see docs/architecture.md for why this step exists.
+# as Vault/Gitea/etc — see infra/docs/architecture.md for why this step exists.
 set -euo pipefail
+cd "$(dirname "${BASH_SOURCE[0]}")/../.."
 
 echo "==> Creating the k3d cluster..."
 k3d cluster create awx-lab --servers 1 --agents 1
 kubectl create namespace awx
 
 echo "==> Installing the awx-operator..."
-kubectl apply -k awx/
+kubectl apply -k infra/awx/
 kubectl wait --for=condition=Ready pod -l control-plane=controller-manager -n awx --timeout=180s
 
 echo "==> Creating the AWX instance (this takes several minutes the first time)..."
-kubectl apply -f awx/awx-instance.yml -n awx
+kubectl apply -f infra/awx/awx-instance.yml -n awx
 echo "    Watching pods — ctrl-C once everything shows Running/Completed:"
 kubectl get pods -n awx --watch &
 WATCH_PID=$!
@@ -39,5 +40,5 @@ AWX is up.
     Gitea:                http://${GITEA_IP}:3000
 
 Next: create the Project + Credential + Job Template as described in
-docs/architecture.md, or in the original lab guide, Section 04.
+infra/docs/architecture.md, or in the original lab guide, Section 04.
 EOF

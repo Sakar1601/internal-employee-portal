@@ -5,17 +5,17 @@
 *.tfplan
 tfplan
 crash.log
-terraform/.terraformrc.mirror
+infra/terraform/.terraformrc.mirror
 *.tfvars
 *.tfvars.json
 !*.tfvars.example
 
 # Vault — generated at bootstrap time, contains root tokens and unseal keys
 secrets/
-vault/vault-main.hcl
+infra/vault/vault-main.hcl
 
 # Ansible
-ansible/inventory/hosts.ini
+infra/ansible/inventory/hosts.ini
 *.retry
 
 # Local env / OS noise

@@ -59,7 +59,7 @@ flowchart LR
 ## Two things worth understanding precisely
 
 **Where `community.hashi_vault` tasks actually execute.** The `vault_read` /
-`vault_write` tasks in `ansible/roles/portal/tasks/main.yml` run on the
+`vault_write` tasks in `infra/ansible/roles/portal/tasks/main.yml` run on the
 **control node** (wherever `ansible-playbook`/AWX's execution environment
 runs), not on the EC2 instance — via an explicit `delegate_to: localhost`
 on both tasks, not automatically. That's *why* the EC2 instance never needs
@@ -84,7 +84,7 @@ accidentally violate.
 ## Known limitations
 
 AWX's pods run inside k3d's own cluster network, separate from the
-`enclave-net` Docker network everything else is on. `scripts/04-awx-up.sh`
+`enclave-net` Docker network everything else is on. `infra/scripts/04-awx-up.sh`
 resolves this with `docker network connect` plus addressing services by
 container IP rather than name — the one place in this lab where the fix
 depends on your local Docker setup rather than being a single universal
@@ -97,7 +97,7 @@ secrets, nothing long-lived to leak. But Postgres 15+ no longer grants
 `CREATE` on the `public` schema to new roles by default, and table
 ownership/ACLs are per-role: a table one dynamic role creates is
 invisible to the next one, which has a different name and no grant on it.
-`scripts/03-terraform-apply.sh` bootstraps a stable, `NOLOGIN` group role
+`infra/scripts/03-terraform-apply.sh` bootstraps a stable, `NOLOGIN` group role
 (`app_role_group`) that owns the schema-level grants and table
 privileges, and every dynamic role is created `IN ROLE app_role_group` so
 it inherits access regardless of which ephemeral identity actually
@@ -108,11 +108,11 @@ in private subnets with no internet gateway at all — not just a security
 group restriction, a genuine absence of any route from the public
 internet. `vault-main` runs in Docker on your laptop, which has no path
 into the VPC either. The portal EC2 instance, in the public subnet, does
-have a route to RDS (same VPC). `scripts/03-terraform-apply.sh` opens an
+have a route to RDS (same VPC). `infra/scripts/03-terraform-apply.sh` opens an
 SSH tunnel through that instance (`-L 15432:<rds-endpoint>:5432`) and
 points Vault's `connection_url` at `host.docker.internal:15432` so the
 Vault *container* can reach the tunnel bound on the host. That tunnel has
 to stay running for as long as Vault needs to issue new dynamic
 credentials — i.e. for the rest of the session, through the Ansible
-deploy. `scripts/99-teardown.sh` closes it via the PID saved to
+deploy. `infra/scripts/99-teardown.sh` closes it via the PID saved to
 `secrets/rds-tunnel.pid`.

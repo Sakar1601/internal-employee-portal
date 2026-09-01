@@ -3,6 +3,7 @@
 # Terraform (VPC, EC2, RDS), then finishes configuring Vault's database
 # secrets engine now that the RDS endpoint actually exists.
 set -euo pipefail
+cd "$(dirname "${BASH_SOURCE[0]}")/../.."
 
 MIRROR_DIR="${TF_MIRROR_DIR:-$HOME/.cache/airgap-lab/terraform-mirror}"
 MIRROR_SRC="/tmp/mirror-src"
@@ -25,7 +26,7 @@ else
   echo "==> Mirror already populated at $MIRROR_DIR, skipping."
 fi
 
-export TF_CLI_CONFIG_FILE="$(pwd)/terraform/.terraformrc.mirror"
+export TF_CLI_CONFIG_FILE="$(pwd)/infra/terraform/.terraformrc.mirror"
 cat > "$TF_CLI_CONFIG_FILE" <<EOF2
 provider_installation {
   filesystem_mirror {
@@ -35,7 +36,7 @@ provider_installation {
 }
 EOF2
 
-cd terraform
+cd infra/terraform
 
 if [ -z "${TF_VAR_allowed_ssh_cidr:-}" ]; then
   MY_IP=$(curl -s https://checkip.amazonaws.com)
@@ -49,17 +50,17 @@ if [ -z "${TF_VAR_db_master_password:-}" ]; then
   # can contain '/', so use hex instead — always RDS-safe, still 96 bits
   # of entropy from 24 random bytes.
   export TF_VAR_db_master_password=$(openssl rand -hex 24)
-  echo "$TF_VAR_db_master_password" > ../secrets/rds-master-password.txt
+  echo "$TF_VAR_db_master_password" > ../../secrets/rds-master-password.txt
   echo "    Saved to secrets/rds-master-password.txt (gitignored) — Vault uses this once, below."
 fi
 
-if [ ! -f ../secrets/portal-lab-ssh-key.pub ]; then
+if [ ! -f ../../secrets/portal-lab-ssh-key.pub ]; then
   echo "==> No SSH key pair found — generating one for the portal instance."
-  ssh-keygen -t ed25519 -f ../secrets/portal-lab-ssh-key -N "" -C "portal-lab@internal-employee-portal"
-  chmod 600 ../secrets/portal-lab-ssh-key
+  ssh-keygen -t ed25519 -f ../../secrets/portal-lab-ssh-key -N "" -C "portal-lab@internal-employee-portal"
+  chmod 600 ../../secrets/portal-lab-ssh-key
   echo "    Saved to secrets/portal-lab-ssh-key(.pub) (gitignored) — this is how Ansible reaches the instance."
 fi
-export TF_VAR_portal_public_key=$(cat ../secrets/portal-lab-ssh-key.pub)
+export TF_VAR_portal_public_key=$(cat ../../secrets/portal-lab-ssh-key.pub)
 
 echo "==> terraform init (watch the output — this should resolve from the local mirror only)"
 terraform init
@@ -79,7 +80,7 @@ terraform apply tfplan
 
 RDS_ENDPOINT=$(terraform output -raw rds_endpoint)
 PORTAL_IP=$(terraform output -raw portal_public_ip)
-cd ..
+cd ../..
 
 echo "==> RDS is up at ${RDS_ENDPOINT}."
 echo "    RDS has no route from your laptop at all (private subnets, no IGW —"
@@ -91,7 +92,7 @@ pkill -f "15432:${RDS_ENDPOINT}" 2>/dev/null || true
 ssh -o StrictHostKeyChecking=accept-new -i secrets/portal-lab-ssh-key \
   -f -N -L "15432:${RDS_ENDPOINT}:5432" "ec2-user@${PORTAL_IP}"
 echo "$(pgrep -f "15432:${RDS_ENDPOINT}" | head -1)" > secrets/rds-tunnel.pid
-echo "    Tunnel PID saved to secrets/rds-tunnel.pid — scripts/99-teardown.sh kills it."
+echo "    Tunnel PID saved to secrets/rds-tunnel.pid — infra/scripts/99-teardown.sh kills it."
 echo "    This tunnel must stay running for as long as Vault needs to reach RDS"
 echo "    (i.e. for the rest of this lab session, including the Ansible deploy)."
 
@@ -114,7 +115,7 @@ echo "    fresh dynamic role would be locked out of tables an earlier, now-expir
 echo "    role created.)"
 python3 - <<PYEOF
 import sys
-sys.path.insert(0, "ansible/roles/portal/files/vendor")
+sys.path.insert(0, "infra/ansible/roles/portal/files/vendor")
 import pg8000.native
 conn = pg8000.native.Connection(
     user="postgres", password="${TF_VAR_db_master_password}",
@@ -145,9 +146,9 @@ Terraform + Vault's database engine are both live.
   Portal will be reachable at: https://${PORTAL_IP}:8443/  (once Ansible deploys it)
   RDS endpoint: ${RDS_ENDPOINT}
 
-Next: ./scripts/04-awx-up.sh, then run the playbook with:
+Next: ./infra/scripts/04-awx-up.sh, then run the playbook with:
   source secrets/ansible-approle.env
-  ansible-playbook -i "${PORTAL_IP}," ansible/site.yml \\
+  ansible-playbook -i "${PORTAL_IP}," infra/ansible/site.yml \\
     -e vault_role_id=\$ANSIBLE_ROLE_ID \\
     -e vault_secret_id=\$ANSIBLE_SECRET_ID \\
     -e db_host=${RDS_ENDPOINT}

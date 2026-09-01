@@ -9,6 +9,7 @@
 #   secrets/unseal-cluster-keys.json
 #   secrets/main-cluster-keys.json
 set -euo pipefail
+cd "$(dirname "${BASH_SOURCE[0]}")/../.."
 mkdir -p secrets
 
 export VAULT_ADDR=http://localhost:8210
@@ -35,10 +36,10 @@ POLICY
 AUTOUNSEAL_TOKEN=$(vault token create -policy=autounseal-policy -period=768h -orphan -format=json | jq -r '.auth.client_token')
 
 echo "==> Writing vault-main.hcl with the real autounseal token..."
-sed "s|__AUTOUNSEAL_TOKEN__|${AUTOUNSEAL_TOKEN}|" vault/vault-main.hcl.tmpl > vault/vault-main.hcl
+sed "s|__AUTOUNSEAL_TOKEN__|${AUTOUNSEAL_TOKEN}|" infra/vault/vault-main.hcl.tmpl > infra/vault/vault-main.hcl
 
 echo "==> Starting vault-main..."
-docker compose --profile main up -d vault-main
+docker compose -f infra/docker-compose.yml --profile main up -d vault-main
 sleep 3
 
 export VAULT_ADDR=http://localhost:8200
@@ -50,7 +51,7 @@ export VAULT_TOKEN="$MAIN_ROOT_TOKEN"
 echo "==> Confirming auto-unseal actually worked..."
 vault status | grep -q "sealed.*false" && echo "    sealed: false — auto-unseal confirmed."
 
-echo "==> Enabling PKI (self-signed root — lab only, see docs/architecture.md)..."
+echo "==> Enabling PKI (self-signed root — lab only, see infra/docs/architecture.md)..."
 vault secrets enable pki || true
 vault secrets tune -max-lease-ttl=87600h pki
 vault write pki/root/generate/internal common_name="lab.internal" ttl=87600h > /dev/null
@@ -81,8 +82,8 @@ after Terraform creates the RDS instance).
   vault-main   root token : see secrets/main-cluster-keys.json   (keep out of git)
   VAULT_ADDR for the main cluster: http://localhost:8200
 
-Checkpoint: run "docker compose restart vault-main" then "vault status" —
+Checkpoint: run "docker compose -f infra/docker-compose.yml restart vault-main" then "vault status" —
 it should come back with sealed: false, with zero manual unseal steps.
 
-Next: ./scripts/03-terraform-apply.sh
+Next: ./infra/scripts/03-terraform-apply.sh
 EOF2
