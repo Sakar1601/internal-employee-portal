@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { apiFetch } from "../api/client";
 import { useAuth } from "../context/AuthContext";
 import { EmployeeTable } from "../components/EmployeeTable";
@@ -10,10 +10,15 @@ export function EmployeesPage() {
   const [editing, setEditing] = useState(null);
   const [showForm, setShowForm] = useState(false);
   const { logout } = useAuth();
+  const latestQuery = useRef("");
 
   async function loadEmployees(query = "") {
+    latestQuery.current = query;
     const resp = await apiFetch(`/employees${query ? `?search=${encodeURIComponent(query)}` : ""}`);
-    setEmployees(await resp.json());
+    const data = await resp.json();
+    if (latestQuery.current === query) {
+      setEmployees(data);
+    }
   }
 
   useEffect(() => {
