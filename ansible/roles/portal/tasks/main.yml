@@ -6,7 +6,7 @@
     auth_method: approle
     role_id: "{{ vault_role_id }}"
     secret_id: "{{ vault_secret_id }}"
-  register: db_creds_result
+  register: portal_db_creds_result
   no_log: true # the credential itself must never hit the job log
 
 - name: Issue a TLS certificate from the internal PKI for this host
@@ -15,7 +15,7 @@
     path: "pki/issue/lab-internal"
     data:
       common_name: "{{ inventory_hostname }}.lab.internal"
-  register: issued_cert
+  register: portal_issued_cert
   no_log: true
 
 - name: Create a dedicated, unprivileged system user for the portal service
@@ -57,7 +57,7 @@
 
 - name: Write the Vault-issued TLS certificate
   ansible.builtin.copy:
-    content: "{{ issued_cert.data.data.certificate }}"
+    content: "{{ portal_issued_cert.data.data.certificate }}"
     dest: /etc/portal/tls/cert.pem
     owner: portal
     group: portal
@@ -67,7 +67,7 @@
 
 - name: Write the Vault-issued TLS private key
   ansible.builtin.copy:
-    content: "{{ issued_cert.data.data.private_key }}"
+    content: "{{ portal_issued_cert.data.data.private_key }}"
     dest: /etc/portal/tls/key.pem
     owner: portal
     group: portal
