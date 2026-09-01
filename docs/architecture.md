@@ -90,6 +90,19 @@ container IP rather than name — the one place in this lab where the fix
 depends on your local Docker setup rather than being a single universal
 command.
 
+**Every Vault-issued dynamic role is a genuinely different Postgres role,
+which conflicts with a shared table.** `database/creds/app-role` returns a
+brand-new role name on every request — that's the point of dynamic
+secrets, nothing long-lived to leak. But Postgres 15+ no longer grants
+`CREATE` on the `public` schema to new roles by default, and table
+ownership/ACLs are per-role: a table one dynamic role creates is
+invisible to the next one, which has a different name and no grant on it.
+`scripts/03-terraform-apply.sh` bootstraps a stable, `NOLOGIN` group role
+(`app_role_group`) that owns the schema-level grants and table
+privileges, and every dynamic role is created `IN ROLE app_role_group` so
+it inherits access regardless of which ephemeral identity actually
+created (or will create) the table.
+
 **Vault (on your laptop) can't reach RDS directly, on purpose.** RDS sits
 in private subnets with no internet gateway at all — not just a security
 group restriction, a genuine absence of any route from the public

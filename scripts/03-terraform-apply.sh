@@ -106,8 +106,34 @@ vault write database/config/portal-postgres \
   allowed_roles="app-role" \
   username="postgres" \
   password="${TF_VAR_db_master_password}"
+echo "==> Bootstrapping a stable group role so every dynamic credential can share"
+echo "    the same tables, regardless of which ephemeral role created them..."
+echo "    (Postgres 15+ no longer grants CREATE on 'public' by default, and every"
+echo "    Vault-issued role has a different name -- without a shared group, each"
+echo "    fresh dynamic role would be locked out of tables an earlier, now-expired"
+echo "    role created.)"
+python3 - <<PYEOF
+import sys
+sys.path.insert(0, "ansible/roles/portal/files/vendor")
+import pg8000.native
+conn = pg8000.native.Connection(
+    user="postgres", password="${TF_VAR_db_master_password}",
+    host="localhost", port=15432, database="portal",
+)
+existing = conn.run("SELECT 1 FROM pg_roles WHERE rolname = 'app_role_group'")
+if not existing:
+    conn.run("CREATE ROLE app_role_group NOLOGIN")
+    conn.run("GRANT CREATE, USAGE ON SCHEMA public TO app_role_group")
+    conn.run("GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO app_role_group")
+    conn.run("ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO app_role_group")
+    print("    Created app_role_group.")
+else:
+    print("    app_role_group already exists, skipping.")
+conn.close()
+PYEOF
+
 vault write database/roles/app-role db_name=portal-postgres \
-  creation_statements="CREATE ROLE \"{{name}}\" WITH LOGIN PASSWORD '{{password}}' VALID UNTIL '{{expiration}}'; GRANT CREATE, USAGE ON SCHEMA public TO \"{{name}}\";" \
+  creation_statements="CREATE ROLE \"{{name}}\" WITH LOGIN PASSWORD '{{password}}' VALID UNTIL '{{expiration}}' IN ROLE app_role_group;" \
   default_ttl="1h" max_ttl="24h"
 
 echo "==> Proving it works — issuing a real dynamic credential against real RDS:"
