@@ -25,10 +25,10 @@ resource "aws_internet_gateway" "lab" {
 
 resource "aws_subnet" "public" {
   vpc_id                  = aws_vpc.lab.id
-  cidr_block               = var.public_subnet_cidr
-  availability_zone        = data.aws_availability_zones.available.names[0]
-  map_public_ip_on_launch  = true
-  tags                     = { Name = "portal-lab-public" }
+  cidr_block              = var.public_subnet_cidr
+  availability_zone       = data.aws_availability_zones.available.names[0]
+  map_public_ip_on_launch = true
+  tags                    = { Name = "portal-lab-public" }
 }
 
 resource "aws_route_table" "public" {
@@ -67,7 +67,7 @@ resource "aws_security_group" "portal" {
   vpc_id      = aws_vpc.lab.id
 
   ingress {
-    description = "SSH from the operator's own IP only"
+    description = "SSH from the operators own IP only"
     from_port   = 22
     to_port     = 22
     protocol    = "tcp"
@@ -83,7 +83,7 @@ resource "aws_security_group" "portal" {
   }
 
   egress {
-    description = "VPC-only — this instance has no route to the public internet at all"
+    description = "VPC-only - this instance has no route to the public internet at all"
     from_port   = 0
     to_port     = 0
     protocol    = "-1"
@@ -98,7 +98,7 @@ resource "aws_security_group" "rds" {
   vpc_id      = aws_vpc.lab.id
 
   ingress {
-    description     = "Postgres, from the portal instance's security group only"
+    description     = "Postgres, from the portal instances security group only"
     from_port       = 5432
     to_port         = 5432
     protocol        = "tcp"
@@ -132,7 +132,7 @@ resource "aws_db_instance" "portal" {
   engine                 = "postgres"
   engine_version         = "16"
   instance_class         = "db.t3.micro" # free-tier eligible, 750 hrs/month for 12 months
-  allocated_storage      = 20             # free-tier ceiling
+  allocated_storage      = 20            # free-tier ceiling
   db_name                = "portal"
   username               = "postgres"
   password               = var.db_master_password
