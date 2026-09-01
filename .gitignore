@@ -1,0 +1,30 @@
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfplan
+tfplan
+crash.log
+terraform/.terraformrc.mirror
+*.tfvars
+*.tfvars.json
+!*.tfvars.example
+
+# Vault — generated at bootstrap time, contains root tokens and unseal keys
+secrets/
+vault/vault-main.hcl
+
+# Ansible
+ansible/inventory/hosts.ini
+*.retry
+
+# Local env / OS noise
+.env
+.DS_Store
+*.log
+.vscode/
+.idea/
+
+# Python
+__pycache__/
+*.pyc

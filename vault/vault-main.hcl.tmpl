@@ -1,0 +1,17 @@
+storage "file" {
+  path = "/vault/data"
+}
+
+listener "tcp" {
+  address     = "0.0.0.0:8200"
+  tls_disable = true   # lab only — never do this in a real deployment
+}
+
+seal "transit" {
+  address    = "http://vault-unseal:8200"
+  token      = "__AUTOUNSEAL_TOKEN__"
+  key_name   = "autounseal"
+  mount_path = "transit/"
+}
+
+ui = true

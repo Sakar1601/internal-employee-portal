@@ -1,0 +1,11 @@
+---
+- name: Configure the portal application tier
+  hosts: web
+  become: true
+  vars:
+    vault_addr: "http://localhost:8200"
+    # role_id / secret_id / db_host are passed via -e at runtime
+    # (or AWX's Extra Variables field) — never committed here.
+    # db_host comes from: terraform -chdir=../terraform output -raw rds_endpoint
+  roles:
+    - portal

@@ -1,0 +1,21 @@
+[Unit]
+Description=Internal Employee Portal
+After=network.target
+
+[Service]
+Type=simple
+User=portal
+Group=portal
+WorkingDirectory=/opt/portal
+EnvironmentFile=/etc/portal/app.env
+ExecStart=/usr/bin/python3 /opt/portal/portal_app.py
+Restart=on-failure
+RestartSec=5
+
+# Basic hardening — the service has no reason to need more than this
+NoNewPrivileges=true
+ProtectSystem=strict
+ReadWritePaths=/opt/portal
+
+[Install]
+WantedBy=multi-user.target

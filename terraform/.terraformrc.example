@@ -1,0 +1,11 @@
+# Copy this to ~/.terraformrc (or set TF_CLI_CONFIG_FILE to point at it).
+# From that point on, Terraform resolves providers ONLY from the local
+# mirror — it never calls registry.terraform.io, which is the actual
+# behavior an air-gapped network would enforce at the network layer.
+
+provider_installation {
+  filesystem_mirror {
+    path    = "/opt/terraform-mirror"
+    include = ["*/*/*"]
+  }
+}

@@ -1,0 +1,100 @@
+---
+- name: Fetch a short-lived database credential from Vault
+  community.hashi_vault.vault_read:
+    url: "{{ vault_addr }}"
+    path: "database/creds/app-role"
+    auth_method: approle
+    role_id: "{{ vault_role_id }}"
+    secret_id: "{{ vault_secret_id }}"
+  register: db_creds_result
+  no_log: true # the credential itself must never hit the job log
+
+- name: Issue a TLS certificate from the internal PKI for this host
+  community.hashi_vault.vault_write:
+    url: "{{ vault_addr }}"
+    path: "pki/issue/lab-internal"
+    data:
+      common_name: "{{ inventory_hostname }}.lab.internal"
+  register: issued_cert
+  no_log: true
+
+- name: Create a dedicated, unprivileged system user for the portal service
+  ansible.builtin.user:
+    name: portal
+    system: true
+    shell: /usr/sbin/nologin
+    create_home: false
+
+- name: Ensure the app and config directories exist with correct ownership
+  ansible.builtin.file:
+    path: "{{ item.path }}"
+    state: directory
+    owner: portal
+    group: portal
+    mode: "{{ item.mode }}"
+  loop:
+    - { path: /opt/portal, mode: "0755" }
+    - { path: /etc/portal, mode: "0750" }
+    - { path: /etc/portal/tls, mode: "0750" }
+
+- name: Deploy the application code
+  ansible.builtin.copy:
+    src: portal_app.py
+    dest: /opt/portal/portal_app.py
+    owner: portal
+    group: portal
+    mode: "0750"
+  notify: Restart portal service
+
+- name: Deploy the vendored dependencies (pure-Python — no pip install on this host)
+  ansible.builtin.copy:
+    src: vendor/
+    dest: /opt/portal/vendor/
+    owner: portal
+    group: portal
+    mode: "0750"
+  notify: Restart portal service
+
+- name: Write the Vault-issued TLS certificate
+  ansible.builtin.copy:
+    content: "{{ issued_cert.data.data.certificate }}"
+    dest: /etc/portal/tls/cert.pem
+    owner: portal
+    group: portal
+    mode: "0640"
+  no_log: true
+  notify: Restart portal service
+
+- name: Write the Vault-issued TLS private key
+  ansible.builtin.copy:
+    content: "{{ issued_cert.data.data.private_key }}"
+    dest: /etc/portal/tls/key.pem
+    owner: portal
+    group: portal
+    mode: "0600"
+  no_log: true
+  notify: Restart portal service
+
+- name: Write the app environment file
+  ansible.builtin.template:
+    src: app.env.j2
+    dest: /etc/portal/app.env
+    owner: portal
+    group: portal
+    mode: "0640"
+  no_log: true
+  notify: Restart portal service
+
+- name: Install the systemd unit
+  ansible.builtin.copy:
+    src: portal.service
+    dest: /etc/systemd/system/portal.service
+    mode: "0644"
+  notify: Restart portal service
+
+- name: Enable and start the portal service
+  ansible.builtin.systemd:
+    name: portal
+    enabled: true
+    state: started
+    daemon_reload: true

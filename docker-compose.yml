@@ -1,0 +1,93 @@
+version: "3.8"
+
+# Support services for the air-gapped-pattern IaC lab.
+# Everything here plays the role of an internal artifact/state/git layer,
+# standing in for what a real enclave would run (internal registry, internal
+# object store, internal git server, a small "unseal" Vault cluster).
+#
+# Run: docker compose up -d
+# Tear down: docker compose down -v   (the -v also drops the named volumes)
+
+services:
+  registry:
+    image: registry:2
+    container_name: registry
+    ports:
+      - "5050:5000"  # host 5000 collides with macOS AirPlay Receiver
+    networks: [enclave-net]
+    restart: unless-stopped
+
+  minio:
+    image: minio/minio
+    container_name: minio
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: admin
+      MINIO_ROOT_PASSWORD: change-me-please
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - minio-data:/data
+    networks: [enclave-net]
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  gitea:
+    image: gitea/gitea:latest
+    container_name: gitea
+    environment:
+      USER_UID: 1000
+      USER_GID: 1000
+    ports:
+      - "3000:3000"
+      - "2222:22"
+    volumes:
+      - gitea-data:/data
+    networks: [enclave-net]
+    restart: unless-stopped
+
+  vault-unseal:
+    image: hashicorp/vault
+    container_name: vault-unseal
+    cap_add: [IPC_LOCK]
+    volumes:
+      - ./vault/vault-unseal.hcl:/vault/config/config.hcl:ro
+      - vault-unseal-data:/vault/data
+    command: server -config=/vault/config/config.hcl
+    ports:
+      - "8210:8200"
+    networks: [enclave-net]
+    restart: unless-stopped
+
+  vault-main:
+    image: hashicorp/vault
+    container_name: vault-main
+    cap_add: [IPC_LOCK]
+    volumes:
+      - ./vault/vault-main.hcl:/vault/config/config.hcl:ro
+      - vault-main-data:/vault/data
+    command: server -config=/vault/config/config.hcl
+    ports:
+      - "8200:8200"
+    networks: [enclave-net]
+    depends_on: [vault-unseal]
+    restart: unless-stopped
+    profiles: ["main"]  # NOT started by a plain `docker compose up -d` —
+                         # see scripts/02-bootstrap-vault.sh. vault-main.hcl
+                         # needs a real transit token written into it first,
+                         # which only exists after vault-unseal is bootstrapped.
+
+networks:
+  enclave-net:
+    name: enclave-net
+
+volumes:
+  minio-data:
+  gitea-data:
+  vault-unseal-data:
+  vault-main-data:

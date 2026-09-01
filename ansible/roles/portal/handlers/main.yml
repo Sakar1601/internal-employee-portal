@@ -1,0 +1,5 @@
+---
+- name: Restart portal service
+  ansible.builtin.service:
+    name: portal
+    state: restarted
