@@ -1,8 +1,8 @@
 ; Generate this file for real with:
-;   terraform -chdir=../terraform output -raw portal_private_ip
-; then fill in the value below. On a real AWS instance in a private subnet
-; with no internet gateway, you'll need a bastion/SSM tunnel to actually
-; reach it — see docs/architecture.md.
+;   terraform -chdir=../terraform output -raw portal_public_ip
+; then fill in the value below. The portal instance sits in the public
+; subnet (directly reachable over SSH from your IP) — only RDS is in the
+; private, no-IGW subnets. See docs/architecture.md.
 
 [web]
 portal ansible_host=REPLACE_WITH_TERRAFORM_OUTPUT ansible_user=ec2-user
