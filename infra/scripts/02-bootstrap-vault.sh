@@ -62,6 +62,7 @@ vault auth enable approle || true
 vault policy write ansible-portal - <<'POLICY'
 path "database/creds/app-role" { capabilities = ["read"] }
 path "pki/issue/lab-internal"  { capabilities = ["create", "update"] }
+path "secret/data/portal-admin" { capabilities = ["read"] }
 POLICY
 vault write auth/approle/role/ansible-portal token_policies="ansible-portal" token_ttl=1h > /dev/null
 

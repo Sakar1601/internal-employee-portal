@@ -1,3 +1,4 @@
+import os
 from pathlib import Path
 
 from fastapi import FastAPI
@@ -19,6 +20,11 @@ def healthz():
     return {"status": "ok"}
 
 
-_frontend_dist = Path(__file__).parent.parent.parent / "frontend" / "dist"
+_frontend_dist = Path(
+    os.environ.get(
+        "FRONTEND_DIST_PATH",
+        str(Path(__file__).parent.parent.parent / "frontend" / "dist"),
+    )
+)
 if _frontend_dist.is_dir():
     app.mount("/", StaticFiles(directory=str(_frontend_dist), html=True), name="frontend")

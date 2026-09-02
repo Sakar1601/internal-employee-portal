@@ -57,23 +57,61 @@
     group: portal
     mode: "{{ item.mode }}"
   loop:
-    - { path: /opt/portal, mode: "0755" }
+    - { path: /opt/portal/backend, mode: "0755" }
+    - { path: /opt/portal/frontend, mode: "0755" }
     - { path: /etc/portal, mode: "0750" }
     - { path: /etc/portal/tls, mode: "0750" }
 
-- name: Deploy the application code
+- name: Copy the backend application code
   ansible.builtin.copy:
-    src: portal_app.py
-    dest: /opt/portal/portal_app.py
+    src: "{{ playbook_dir }}/../../app/backend/app/"
+    dest: /opt/portal/backend/app/
     owner: portal
     group: portal
     mode: "0750"
   notify: Restart portal service
 
-- name: Deploy the vendored dependencies (pure-Python — no pip install on this host)
+- name: Copy the backend requirements file
   ansible.builtin.copy:
-    src: vendor/
-    dest: /opt/portal/vendor/
+    src: "{{ playbook_dir }}/../../app/backend/requirements.txt"
+    dest: /opt/portal/backend/requirements.txt
+    owner: portal
+    group: portal
+    mode: "0640"
+
+- name: Copy the pre-built wheelhouse (no network access needed on this host)
+  ansible.builtin.copy:
+    src: "{{ playbook_dir }}/../../app/backend/wheelhouse/"
+    dest: /opt/portal/backend/wheelhouse/
+    owner: portal
+    group: portal
+    mode: "0750"
+
+- name: Create the backend virtualenv
+  ansible.builtin.command:
+    cmd: python3 -m venv /opt/portal/backend/.venv
+    creates: /opt/portal/backend/.venv/bin/python
+
+- name: Install backend dependencies from the wheelhouse only
+  ansible.builtin.pip:
+    requirements: /opt/portal/backend/requirements.txt
+    virtualenv: /opt/portal/backend/.venv
+    extra_args: "--no-index --find-links=/opt/portal/backend/wheelhouse"
+  become: true
+  notify: Restart portal service
+
+- name: Fix ownership of the virtualenv (pip module runs as root via become)
+  ansible.builtin.file:
+    path: /opt/portal/backend/.venv
+    state: directory
+    owner: portal
+    group: portal
+    recurse: true
+
+- name: Copy the pre-built frontend static bundle
+  ansible.builtin.copy:
+    src: "{{ playbook_dir }}/../../app/frontend/dist/"
+    dest: /opt/portal/frontend/dist/
     owner: portal
     group: portal
     mode: "0750"
@@ -99,10 +137,29 @@
   no_log: true
   notify: Restart portal service
 
+- name: Fetch the portal's own admin/JWT secrets from Vault
+  community.hashi_vault.vault_read:
+    url: "{{ vault_addr }}"
+    path: "secret/data/portal-admin"
+    auth_method: approle
+    role_id: "{{ vault_role_id }}"
+    secret_id: "{{ vault_secret_id }}"
+  delegate_to: localhost
+  become: false
+  register: portal_admin_secret
+  no_log: true
+
+- name: Set facts from the fetched secret
+  ansible.builtin.set_fact:
+    portal_jwt_secret: "{{ portal_admin_secret.data.data.data.jwt_secret }}"
+    portal_admin_username: "{{ portal_admin_secret.data.data.data.admin_username }}"
+    portal_admin_password_hash: "{{ portal_admin_secret.data.data.data.admin_password_hash }}"
+  no_log: true
+
 - name: Write the app environment file
   ansible.builtin.template:
-    src: app.env.j2
-    dest: /etc/portal/app.env
+    src: portal.env.j2
+    dest: /etc/portal/portal.env
     owner: portal
     group: portal
     mode: "0640"

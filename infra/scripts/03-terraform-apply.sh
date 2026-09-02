@@ -113,20 +113,22 @@ echo "    (Postgres 15+ no longer grants CREATE on 'public' by default, and ever
 echo "    Vault-issued role has a different name -- without a shared group, each"
 echo "    fresh dynamic role would be locked out of tables an earlier, now-expired"
 echo "    role created.)"
+python3 -c "import psycopg2" 2>/dev/null || pip install --user psycopg2-binary
 python3 - <<PYEOF
-import sys
-sys.path.insert(0, "infra/ansible/roles/portal/files/vendor")
-import pg8000.native
-conn = pg8000.native.Connection(
+import psycopg2
+conn = psycopg2.connect(
     user="postgres", password="${TF_VAR_db_master_password}",
-    host="localhost", port=15432, database="portal",
+    host="localhost", port=15432, dbname="portal",
 )
-existing = conn.run("SELECT 1 FROM pg_roles WHERE rolname = 'app_role_group'")
+conn.autocommit = True
+cur = conn.cursor()
+cur.execute("SELECT 1 FROM pg_roles WHERE rolname = 'app_role_group'")
+existing = cur.fetchone()
 if not existing:
-    conn.run("CREATE ROLE app_role_group NOLOGIN")
-    conn.run("GRANT CREATE, USAGE ON SCHEMA public TO app_role_group")
-    conn.run("GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO app_role_group")
-    conn.run("ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO app_role_group")
+    cur.execute("CREATE ROLE app_role_group NOLOGIN")
+    cur.execute("GRANT CREATE, USAGE ON SCHEMA public TO app_role_group")
+    cur.execute("GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO app_role_group")
+    cur.execute("ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO app_role_group")
     print("    Created app_role_group.")
 else:
     print("    app_role_group already exists, skipping.")
@@ -139,6 +141,22 @@ vault write database/roles/app-role db_name=portal-postgres \
 
 echo "==> Proving it works — issuing a real dynamic credential against real RDS:"
 vault read database/creds/app-role
+
+echo "==> Bootstrapping the portal's own admin/JWT secrets in Vault's KV store..."
+vault secrets enable -path=secret kv-v2 2>&1 | grep -v "path is already in use" || true
+if [ ! -f secrets/portal-admin-password.txt ]; then
+  PORTAL_ADMIN_PASSWORD=$(openssl rand -hex 16)
+  echo "$PORTAL_ADMIN_PASSWORD" > secrets/portal-admin-password.txt
+  echo "    Generated portal admin password, saved to secrets/portal-admin-password.txt (gitignored)."
+else
+  PORTAL_ADMIN_PASSWORD=$(cat secrets/portal-admin-password.txt)
+fi
+python3 -c "import bcrypt" 2>/dev/null || pip install --user bcrypt
+PORTAL_ADMIN_HASH=$(python3 -c "import bcrypt,sys; print(bcrypt.hashpw(sys.argv[1].encode(), bcrypt.gensalt()).decode())" "$PORTAL_ADMIN_PASSWORD")
+vault kv put secret/portal-admin \
+  jwt_secret="$(openssl rand -hex 32)" \
+  admin_username="admin" \
+  admin_password_hash="$PORTAL_ADMIN_HASH"
 
 cat <<EOF2
 
