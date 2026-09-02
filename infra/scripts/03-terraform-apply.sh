@@ -153,8 +153,15 @@ else
 fi
 python3 -c "import bcrypt" 2>/dev/null || pip install --user bcrypt
 PORTAL_ADMIN_HASH=$(python3 -c "import bcrypt,sys; print(bcrypt.hashpw(sys.argv[1].encode(), bcrypt.gensalt()).decode())" "$PORTAL_ADMIN_PASSWORD")
+if [ ! -f secrets/portal-jwt-secret.txt ]; then
+  PORTAL_JWT_SECRET=$(openssl rand -hex 32)
+  echo "$PORTAL_JWT_SECRET" > secrets/portal-jwt-secret.txt
+  echo "    Generated portal JWT secret, saved to secrets/portal-jwt-secret.txt (gitignored)."
+else
+  PORTAL_JWT_SECRET=$(cat secrets/portal-jwt-secret.txt)
+fi
 vault kv put secret/portal-admin \
-  jwt_secret="$(openssl rand -hex 32)" \
+  jwt_secret="$PORTAL_JWT_SECRET" \
   admin_username="admin" \
   admin_password_hash="$PORTAL_ADMIN_HASH"
 

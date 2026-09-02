@@ -12,5 +12,9 @@ ExecStart=/opt/portal/backend/.venv/bin/uvicorn app.main:app --host 0.0.0.0 --po
 Restart=on-failure
 RestartSec=5
 
+NoNewPrivileges=true
+ProtectSystem=strict
+ReadWritePaths=/opt/portal/backend
+
 [Install]
 WantedBy=multi-user.target
