@@ -79,6 +79,14 @@
     group: portal
     mode: "0640"
 
+- name: Ensure the wheelhouse and frontend build exist (build them if not)
+  ansible.builtin.command:
+    cmd: "{{ playbook_dir }}/../../infra/scripts/build-app.sh"
+    chdir: "{{ playbook_dir }}/../.."
+    creates: "{{ playbook_dir }}/../../app/frontend/dist/index.html"
+  delegate_to: localhost
+  become: false
+
 - name: Copy the pre-built wheelhouse (no network access needed on this host)
   ansible.builtin.copy:
     src: "{{ playbook_dir }}/../../app/backend/wheelhouse/"

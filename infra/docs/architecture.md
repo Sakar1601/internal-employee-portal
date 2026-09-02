@@ -52,7 +52,7 @@ flowchart LR
 | Vault `pki` secrets engine | An internal CA issuing certs to every host | Centralized trust instead of self-signed certs everywhere |
 | Public subnet + VPC-only egress security group | An inbound-only DMZ pattern | The instance is reachable, but network-enforced to have zero path to the public internet — not "we chose not to install things," but "it structurally cannot" |
 | RDS in private subnets, no IGW | A real database with no public exposure | Standard least-exposure DB placement, and solves the real problem of the app needing to reach a database from AWS, not from your laptop |
-| The portal app itself (`portal_app.py`) | Vendored, dependency-free deployment | Runs with zero `pip install` on the target — every dependency it needs was staged and copied in by Ansible, not fetched live |
+| The portal app itself (real FastAPI + React app, `app/backend`/`app/frontend`) | Air-gapped deployment via a pre-built pip wheelhouse | `pip install --no-index --find-links=` from a wheelhouse built on the control node and copied in by Ansible — the target never needs PyPI access, but it does run a real `pip install` (resolving the app's actual dependency graph), not a hand-vendored, dependency-free copy |
 | AWX (k3d) | HashiCorp/Red Hat's Ansible Automation Platform Controller | Projects, Credentials, and Job Templates — the same primitives AAP uses |
 | GitHub Actions (`validate.yml`) | A CI gate before any change reaches a shared environment | `terraform validate` + `ansible-lint` on every push |
 

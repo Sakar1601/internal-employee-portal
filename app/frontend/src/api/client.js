@@ -10,7 +10,7 @@ export async function apiFetch(path, options = {}) {
   const resp = await fetch(`${API_BASE}${path}`, { ...options, headers });
   if (resp.status === 401) {
     localStorage.removeItem("token");
-    window.location.href = "/login";
+    window.location.href = "/";
     throw new Error("Unauthorized");
   }
   return resp;

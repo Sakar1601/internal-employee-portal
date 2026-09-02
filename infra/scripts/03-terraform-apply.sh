@@ -136,7 +136,7 @@ conn.close()
 PYEOF
 
 vault write database/roles/app-role db_name=portal-postgres \
-  creation_statements="CREATE ROLE \"{{name}}\" WITH LOGIN PASSWORD '{{password}}' VALID UNTIL '{{expiration}}' IN ROLE app_role_group;" \
+  creation_statements="CREATE ROLE \"{{name}}\" WITH LOGIN PASSWORD '{{password}}' VALID UNTIL '{{expiration}}' IN ROLE app_role_group; ALTER ROLE \"{{name}}\" SET role = app_role_group;" \
   default_ttl="1h" max_ttl="24h"
 
 echo "==> Proving it works — issuing a real dynamic credential against real RDS:"
