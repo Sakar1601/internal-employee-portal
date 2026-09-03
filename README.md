@@ -2,21 +2,64 @@
 
 ![Validate](https://github.com/Sakar1601/internal-employee-portal/actions/workflows/validate.yml/badge.svg)
 
-A working internal web app — a JWT-authenticated employee directory with
-real create/read/update/delete, built as a FastAPI backend and a separate
-React frontend, backed by Postgres — deployed the way an air-gapped
-enterprise environment would deploy it: no live Terraform Registry, no
-cloud KMS for Vault's auto-unseal, no public Ansible Galaxy/Automation
-Hub, a pip wheelhouse built ahead of time instead of installing packages
-on the target, and a target host with a network-enforced (not just
-conventional) inability to reach the public internet.
+## What this is
 
-**What this is:** a personal portfolio project built to demonstrate two
-things at once — application engineering (a real API, real auth, a real
-frontend talking to it) and platform engineering (Terraform, Vault,
-Ansible, and AWX standing up and deploying that app the way it would be
-done in a regulated, network-isolated environment). Every command has
-actually been run; nothing here is a mockup.
+I built an internal employee directory — the kind of small line-of-business
+app every mid-size company has one of — and then deployed it the way a
+regulated, network-isolated enterprise actually would: no public Terraform
+Registry, no cloud KMS for secrets auto-unseal, no public Ansible Galaxy, a
+dependency wheelhouse built ahead of time instead of installing packages on
+the target, and a target host with a *network-enforced* — not just
+conventional — inability to reach the public internet.
+
+It's one project telling two stories at once:
+
+- **The application** is real, not a stub: a FastAPI backend with JWT auth
+  and full CRUD over an employee table, a React frontend that talks to it,
+  Postgres in production. Log in, search, add someone, edit them, delete
+  them — it all works.
+- **The platform underneath it** is the actual point. Terraform provisions
+  a real AWS VPC with a public EC2 host and a *genuinely* unreachable
+  private RDS database (no internet gateway route at all, not merely a
+  security-group rule). Two HashiCorp Vault clusters auto-unseal each other
+  via Transit and hand out a fresh one-hour database credential and a
+  fresh TLS certificate on every deploy — Vault reaches that private
+  database from a laptop via an SSH tunnel through the one host that's
+  allowed to. AWX (the open-source core of Red Hat's Ansible Automation
+  Platform), running in a local k3d cluster, is the controller that would
+  execute the same Ansible job a real enterprise CI/CD pipeline runs.
+
+Every command in this README has actually been run against real AWS
+infrastructure — including the mistakes: Vault couldn't originally reach
+the private database at all, a Postgres role-privilege change broke
+credential rotation, and a hardcoded execution-environment gap meant
+secrets tasks silently ran on the wrong host. Fixing each of those for
+real is a bigger part of the portfolio value here than the parts that
+worked on the first try. Nothing here is a mockup, and nothing here was
+written and never executed.
+
+## Why it's worth a look
+
+- **A real air gap, not a simulated one.** The RDS subnets have no route
+  to the internet at the network layer — Terraform never attaches an
+  Internet Gateway route to them. Flip `publicly_accessible` to `true` by
+  mistake and the database still can't be reached from outside the VPC.
+- **Two Vault clusters that unseal each other.** No cloud KMS is available
+  in this lab, so a small `vault-unseal` cluster holds a Transit key that
+  `vault-main` calls out to on every restart — zero manual `vault operator
+  unseal` steps, ever, for the cluster that actually matters.
+- **Dynamic, one-hour database credentials.** The application never sees a
+  long-lived database password. Vault's database secrets engine mints a
+  brand-new Postgres role per deploy and revokes it on schedule.
+- **A pip wheelhouse instead of hand-vendoring.** The backend's exact
+  dependency graph is resolved and downloaded ahead of time for the
+  target's Python/platform, then installed with `pip install --no-index`
+  — no live PyPI call ever reaches the instance, and it still scales the
+  way a real `pip install` does.
+- **AWX standing in for a real automation controller.** The same Ansible
+  playbook a solo operator can run by hand is also meant to run as an AWX
+  Job Template — Projects, Credentials, Inventories — the same primitives
+  Red Hat's Ansible Automation Platform uses in production.
 
 <!-- TODO: screenshot of the login page -->
 <!-- TODO: screenshot of the employee list view -->
