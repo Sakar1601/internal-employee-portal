@@ -11,6 +11,7 @@ export function EmployeesPage() {
   const [showForm, setShowForm] = useState(false);
   const { logout } = useAuth();
   const latestQuery = useRef("");
+  const departments = new Set(employees.map((employee) => employee.department)).size;
 
   async function loadEmployees(query = "") {
     latestQuery.current = query;
@@ -44,38 +45,65 @@ export function EmployeesPage() {
 
   return (
     <div className="employees-page">
-      <header>
-        <h1>Internal Employee Portal</h1>
-        <button onClick={logout}>Log out</button>
-      </header>
-      <div className="toolbar">
-        <input
-          placeholder="Search by name..."
-          value={search}
-          onChange={(e) => {
-            setSearch(e.target.value);
-            loadEmployees(e.target.value);
-          }}
-        />
-        <button
-          onClick={() => {
-            setEditing(null);
-            setShowForm(true);
-          }}
-        >
-          Add employee
+      <header className="page-header">
+        <div>
+          <p className="eyebrow">People registry</p>
+          <h1>Internal Employee Portal</h1>
+          <p className="page-subtitle">Find, add, and maintain employee records.</p>
+        </div>
+        <button className="ghost-button" onClick={logout}>
+          Log out
         </button>
-      </div>
-      <EmployeeTable
-        employees={employees}
-        onEdit={(emp) => {
-          setEditing(emp);
-          setShowForm(true);
-        }}
-        onDelete={handleDelete}
-      />
+      </header>
+
+      <main className="directory-shell">
+        <section className="directory-summary" aria-label="Directory summary">
+          <div>
+            <span>{employees.length}</span>
+            <p>Visible employees</p>
+          </div>
+          <div>
+            <span>{departments}</span>
+            <p>Departments</p>
+          </div>
+        </section>
+
+        <section className="directory-workspace">
+          <div className="toolbar">
+            <label className="search-field">
+              <span>Search employees</span>
+              <input
+                placeholder="Search by name"
+                value={search}
+                onChange={(e) => {
+                  setSearch(e.target.value);
+                  loadEmployees(e.target.value);
+                }}
+              />
+            </label>
+            <button
+              className="primary-button"
+              onClick={() => {
+                setEditing(null);
+                setShowForm(true);
+              }}
+            >
+              Add employee
+            </button>
+          </div>
+          <EmployeeTable
+            employees={employees}
+            onEdit={(emp) => {
+              setEditing(emp);
+              setShowForm(true);
+            }}
+            onDelete={handleDelete}
+          />
+        </section>
+      </main>
+
       {showForm && (
-        <div className="modal">
+        <div className="modal" role="presentation">
           <EmployeeForm
             initial={editing}
             onSubmit={handleSave}

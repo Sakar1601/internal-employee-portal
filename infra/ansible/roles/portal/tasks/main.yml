@@ -100,6 +100,15 @@
     cmd: python3 -m venv /opt/portal/backend/.venv
     creates: /opt/portal/backend/.venv/bin/python
 
+- name: Upgrade the venv's pip from the wheelhouse before installing anything else
+  # Version must match whatever build-app.sh's `pip download ... pip` resolves
+  # to at build time -- bump both together if this ever drifts out of sync.
+  ansible.builtin.pip:
+    name: "pip==26.0.1"
+    virtualenv: /opt/portal/backend/.venv
+    extra_args: "--no-index --find-links=/opt/portal/backend/wheelhouse"
+  become: true
+
 - name: Install backend dependencies from the wheelhouse only
   ansible.builtin.pip:
     requirements: /opt/portal/backend/requirements.txt

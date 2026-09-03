@@ -25,6 +25,11 @@ infra/ansible/inventory/hosts.ini
 .vscode/
 .idea/
 
+# Working notes / analysis artifacts, not project deliverables
+graphify-out/
+instructions.md
+REPORT.md
+
 # Python
 __pycache__/
 *.pyc
