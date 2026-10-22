@@ -94,3 +94,49 @@ def test_delete_employee(client, auth_headers):
 def test_get_nonexistent_employee_returns_404(client, auth_headers):
     resp = client.get("/api/employees/9999", headers=auth_headers)
     assert resp.status_code == 404
+
+
+def _make(client, headers, name, department="Engineering"):
+    resp = client.post(
+        "/api/employees",
+        json={"name": name, "department": department, "start_date": "2021-05-01"},
+        headers=headers,
+    )
+    assert resp.status_code == 201
+    return resp.json()
+
+
+def test_search_treats_like_wildcards_literally(client, auth_headers):
+    _make(client, auth_headers, "Ada Lovelace")
+    _make(client, auth_headers, "100% Remote Rep")
+    assert [e["name"] for e in client.get("/api/employees?search=%25", headers=auth_headers).json()] == [
+        "100% Remote Rep"
+    ]
+    assert client.get("/api/employees?search=A_a", headers=auth_headers).json() == []
+
+
+def test_list_is_paginated_and_bounded(client, auth_headers):
+    for n in ("Ann", "Bob", "Cyd"):
+        _make(client, auth_headers, n)
+    page = client.get("/api/employees?limit=2&offset=1", headers=auth_headers).json()
+    assert [e["name"] for e in page] == ["Bob", "Cyd"]
+    assert client.get("/api/employees?limit=0", headers=auth_headers).status_code == 422
+    assert client.get("/api/employees?limit=1001", headers=auth_headers).status_code == 422
+
+
+@pytest.mark.parametrize(
+    "payload",
+    [
+        {"name": "", "department": "Eng", "start_date": "2020-01-01"},
+        {"name": "   ", "department": "Eng", "start_date": "2020-01-01"},
+        {"name": "x" * 201, "department": "Eng", "start_date": "2020-01-01"},
+        {"name": "Ok", "department": "d" * 101, "start_date": "2020-01-01"},
+    ],
+)
+def test_invalid_names_are_rejected_not_500(client, auth_headers, payload):
+    assert client.post("/api/employees", json=payload, headers=auth_headers).status_code == 422
+
+
+def test_names_are_trimmed(client, auth_headers):
+    created = _make(client, auth_headers, "  Ada Lovelace  ")
+    assert created["name"] == "Ada Lovelace"

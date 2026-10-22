@@ -1,6 +1,6 @@
 from typing import List, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
@@ -16,14 +16,18 @@ router = APIRouter(dependencies=[Depends(get_current_user)])
 def list_employees(
     search: Optional[str] = None,
     department: Optional[str] = None,
+    limit: int = Query(500, ge=1, le=1000),
+    offset: int = Query(0, ge=0),
     db: Session = Depends(get_db),
 ):
     query = select(Employee)
     if search:
-        query = query.where(Employee.name.ilike(f"%{search}%"))
+        # Escape LIKE wildcards so "%" or "_" in the box match literally.
+        escaped = search.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
+        query = query.where(Employee.name.ilike(f"%{escaped}%", escape="\\"))
     if department:
         query = query.where(Employee.department == department)
-    query = query.order_by(Employee.name)
+    query = query.order_by(Employee.name, Employee.id).limit(limit).offset(offset)
     return db.execute(query).scalars().all()
 
 

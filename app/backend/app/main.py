@@ -1,7 +1,7 @@
 import os
 from pathlib import Path
 
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
@@ -21,19 +21,30 @@ def healthz():
     return {"status": "ok"}
 
 
-_frontend_dist = Path(
-    os.environ.get(
-        "FRONTEND_DIST_PATH",
-        str(Path(__file__).parent.parent.parent / "frontend" / "dist"),
-    )
-)
-if _frontend_dist.is_dir():
-    app.mount(
-        "/assets",
-        StaticFiles(directory=str(_frontend_dist / "assets")),
-        name="frontend-assets",
-    )
+def mount_frontend(app: FastAPI, dist: Path) -> None:
+    """Serve the built SPA: real files from dist/, index.html for client-side routes."""
+    if not dist.is_dir():
+        return
+    root = dist.resolve()
+    if (root / "assets").is_dir():
+        app.mount("/assets", StaticFiles(directory=str(root / "assets")), name="frontend-assets")
 
     @app.get("/{full_path:path}")
     async def serve_spa(full_path: str):
-        return FileResponse(str(_frontend_dist / "index.html"))
+        if full_path == "api" or full_path.startswith("api/"):
+            raise HTTPException(status_code=404, detail="Not Found")
+        candidate = (root / full_path).resolve()
+        if full_path and candidate.is_file() and candidate.is_relative_to(root):
+            return FileResponse(str(candidate))
+        return FileResponse(str(root / "index.html"))
+
+
+mount_frontend(
+    app,
+    Path(
+        os.environ.get(
+            "FRONTEND_DIST_PATH",
+            str(Path(__file__).parent.parent.parent / "frontend" / "dist"),
+        )
+    ),
+)
