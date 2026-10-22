@@ -1,5 +1,3 @@
-import os
-
 import bcrypt
 import pytest
 

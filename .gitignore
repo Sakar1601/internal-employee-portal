@@ -29,7 +29,22 @@ infra/ansible/inventory/hosts.ini
 graphify-out/
 instructions.md
 REPORT.md
+infra/docs/superpowers/
 
 # Python
 __pycache__/
 *.pyc
+.venv/
+.pytest_cache/
+.ruff_cache/
+wheelhouse/
+
+# Node / frontend build output
+node_modules/
+dist/
+
+# Local tool folders and test output
+.claude/
+.ansible/
+playwright-report/
+test-results/
