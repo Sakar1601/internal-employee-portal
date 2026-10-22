@@ -1,53 +1,81 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { useAuth } from "../context/AuthContext";
+import { Navigate, useNavigate } from "react-router-dom";
+import { isDemo, DEMO_CREDENTIALS } from "../api";
+import { useAuth } from "../context/auth";
+import { DemoBanner } from "../components/DemoBanner";
+import { LogoMark } from "../components/Logo";
 
 export function LoginPage() {
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
+  const [username, setUsername] = useState(isDemo ? DEMO_CREDENTIALS.username : "");
+  const [password, setPassword] = useState(isDemo ? DEMO_CREDENTIALS.password : "");
   const [error, setError] = useState("");
-  const { login } = useAuth();
+  const [pending, setPending] = useState(false);
+  const { token, login } = useAuth();
   const navigate = useNavigate();
+
+  if (token) return <Navigate to="/" replace />;
 
   async function handleSubmit(e) {
     e.preventDefault();
     setError("");
+    setPending(true);
     try {
       await login(username, password);
       navigate("/");
-    } catch {
-      setError("Invalid username or password");
+    } catch (err) {
+      setError(err.status === 401 ? "Invalid username or password." : "Could not reach the server. Try again.");
+      setPending(false);
     }
   }
 
   return (
-    <div className="login-page">
-      <form onSubmit={handleSubmit} className="login-panel">
-        <div>
+    <>
+      <DemoBanner />
+      <main className="login-page">
+        <section className="login-intro" aria-hidden="false">
+          <LogoMark size={48} />
           <p className="eyebrow">People registry</p>
-          <h1>Internal Employee Portal</h1>
-          <p className="login-copy">Sign in to maintain the employee directory.</p>
-        </div>
-        <label>
-          <span>Username</span>
-          <input
-            autoComplete="username"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-          />
-        </label>
-        <label>
-          <span>Password</span>
-          <input
-            type="password"
-            autoComplete="current-password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-          />
-        </label>
-        {error && <p className="error">{error}</p>}
-        <button type="submit" className="primary-button">Log in</button>
-      </form>
-    </div>
+          <h1>
+            Who works here,
+            <br />
+            <em>and since when.</em>
+          </h1>
+          <p className="login-lede">
+            The internal directory for a small, regulated company. Sign in to search, add and correct employee
+            records.
+          </p>
+        </section>
+        <form onSubmit={handleSubmit} className="login-panel">
+          <h2>Sign in</h2>
+          {isDemo && (
+            <p className="login-hint">
+              Demo credentials are prefilled. They only unlock the simulator in this tab; there is no real account.
+            </p>
+          )}
+          <label>
+            <span>Username</span>
+            <input autoComplete="username" value={username} onChange={(e) => setUsername(e.target.value)} required />
+          </label>
+          <label>
+            <span>Password</span>
+            <input
+              type="password"
+              autoComplete="current-password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+            />
+          </label>
+          {error && (
+            <p className="form-error" role="alert">
+              {error}
+            </p>
+          )}
+          <button type="submit" className="btn btn-primary" disabled={pending}>
+            {pending ? "Signing in…" : "Sign in"}
+          </button>
+        </form>
+      </main>
+    </>
   );
 }

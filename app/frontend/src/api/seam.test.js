@@ -43,6 +43,15 @@ describe("demo mode", () => {
     expect(entry.response.access_token).toMatch(/…$/);
   });
 
+  it("keeps list responses as arrays in the activity log", async () => {
+    const { api, tokenStore, DEMO_CREDENTIALS } = await loadSeam(true);
+    const { getActivity } = await import("./activity.js");
+    tokenStore.set((await api.login(DEMO_CREDENTIALS.username, DEMO_CREDENTIALS.password)).access_token);
+    const rows = await api.listEmployees();
+    expect(Array.isArray(getActivity()[0].response)).toBe(true);
+    expect(getActivity()[0].response).toHaveLength(rows.length);
+  });
+
   it("throws ApiError with the backend's detail on bad credentials", async () => {
     const { api } = await loadSeam(true);
     await expect(api.login("admin", "wrong")).rejects.toMatchObject({ status: 401, message: "Incorrect username or password" });

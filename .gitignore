@@ -48,3 +48,6 @@ dist/
 .ansible/
 playwright-report/
 test-results/
+
+# Static demo build output
+dist-demo/

@@ -31,6 +31,7 @@ export const tokenStore = {
 export const SESSION_EXPIRED_EVENT = "portal:session-expired";
 
 function redact(value) {
+  if (Array.isArray(value)) return value;
   if (!value || typeof value !== "object") return value;
   const copy = { ...value };
   if ("password" in copy) copy.password = "••••••••";
