@@ -195,7 +195,10 @@
   transform: translateX(0);
 }
 .timeline-axis span:last-child {
-  border-left-color: var(--rule-strong);
+  border-left: 0;
+  border-right: 1px solid var(--rule-strong);
+  padding: 0 4px 0 0;
+  transform: translateX(-100%);
 }
 .lane {
   position: relative;

@@ -1,0 +1,12 @@
+.git
+**/node_modules
+**/dist
+**/dist-demo
+**/.venv
+**/wheelhouse
+**/__pycache__
+**/*.db
+secrets
+infra
+graphify-out
+docs

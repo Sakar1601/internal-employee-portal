@@ -1,0 +1,19 @@
+# One command: `docker compose up --build`, then open http://localhost:8080
+# Sign in with admin / demo-password. These are LOCAL-ONLY defaults; override them
+# (JWT_SECRET, ADMIN_PASSWORD_HASH) with your own values for anything else.
+# The lab platform lives in infra/docker-compose.yml and is unrelated to this file.
+services:
+  portal:
+    build: .
+    ports:
+      - "8080:8000"
+    environment:
+      DATABASE_URL: sqlite:////data/portal.db
+      JWT_SECRET: ${JWT_SECRET:-local-dev-only-change-me}
+      ADMIN_USERNAME: ${ADMIN_USERNAME:-admin}
+      # bcrypt of "demo-password"; "$$" is how Compose escapes a literal "$".
+      ADMIN_PASSWORD_HASH: ${ADMIN_PASSWORD_HASH:-$$2b$$12$$LKJAHwdM448ZenxBt1Ka4eNp8mclXHT36ZIlOTRAwm7flTiVr/ndS}
+    volumes:
+      - portal-data:/data
+volumes:
+  portal-data:

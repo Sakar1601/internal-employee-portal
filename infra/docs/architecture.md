@@ -54,7 +54,7 @@ flowchart LR
 | RDS in private subnets, no IGW | A real database with no public exposure | Standard least-exposure DB placement, and solves the real problem of the app needing to reach a database from AWS, not from your laptop |
 | The portal app itself (real FastAPI + React app, `app/backend`/`app/frontend`) | Air-gapped deployment via a pre-built pip wheelhouse | `pip install --no-index --find-links=` from a wheelhouse built on the control node and copied in by Ansible — the target never needs PyPI access, but it does run a real `pip install` (resolving the app's actual dependency graph), not a hand-vendored, dependency-free copy |
 | AWX (k3d) | HashiCorp/Red Hat's Ansible Automation Platform Controller | Projects, Credentials, and Job Templates — the same primitives AAP uses |
-| GitHub Actions (`validate.yml`) | A CI gate before any change reaches a shared environment | `terraform validate` + `ansible-lint` on every push |
+| GitHub Actions (`validate.yml`) | A CI gate before any change reaches a shared environment | `terraform fmt`/`validate`, `ansible-lint`, backend tests and the frontend lint, tests and builds on every push |
 
 ## Two things worth understanding precisely
 
@@ -80,6 +80,12 @@ traffic — so even though a route exists, the instance can never use it to
 reach anything outside the VPC. That's what makes "no live package
 installs" a network-enforced fact here, not a convention someone could
 accidentally violate.
+
+## Implementation status
+
+Terraform, Ansible, the Vault bootstrap scripts, the AWX manifests and the application are all in this repo. CI
+validates Terraform and Ansible syntax and lint and runs the application tests; it does not apply infrastructure. The
+simulated demo (landing page and app) exercises none of this platform; it only shows the application's interface.
 
 ## Known limitations
 

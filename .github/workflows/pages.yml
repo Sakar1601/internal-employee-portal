@@ -1,0 +1,59 @@
+name: Demo site
+
+# Builds the static, simulator-backed demo (landing page + app) on every push to main.
+# It is only deployed to GitHub Pages once the repository variable ENABLE_PAGES is "true"
+# (Settings > Pages > Source: GitHub Actions, then Settings > Variables > ENABLE_PAGES).
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: app/frontend
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: app/frontend/package-lock.json
+
+      - run: npm ci
+
+      # Both pages use relative asset paths and the app routes by URL hash, so the build works
+      # under any sub-path (https://<user>.github.io/<repo>/). SITE_URL only feeds the absolute
+      # Open Graph URLs.
+      - name: Build demo
+        env:
+          SITE_URL: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/
+        run: npm run build:demo
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: app/frontend/dist-demo
+
+  deploy:
+    needs: build
+    if: vars.ENABLE_PAGES == 'true'
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

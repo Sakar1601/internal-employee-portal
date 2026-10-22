@@ -75,8 +75,8 @@ jobs:
           ADMIN_PASSWORD_HASH: "$2b$12$abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUV"
         run: python -m pytest -v
 
-  frontend-build:
-    name: Frontend build
+  frontend:
+    name: Frontend lint, tests, builds
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -95,3 +95,12 @@ jobs:
 
       - name: Build
         run: npm run build
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Unit tests (API seam and simulator)
+        run: npm test
+
+      - name: Static demo build
+        run: npm run build:demo
