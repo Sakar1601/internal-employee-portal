@@ -739,6 +739,17 @@ tr.is-flash {
 @media (max-width: 900px) {
   .login-page {
     grid-template-columns: 1fr;
+    gap: 24px;
+    padding-top: 28px;
+  }
+  .login-intro {
+    gap: 10px;
+  }
+  .login-intro h1 {
+    font-size: clamp(2.2rem, 9vw, 3.2rem);
+  }
+  .login-lede {
+    display: none;
   }
   .lane {
     grid-template-columns: 1fr;
