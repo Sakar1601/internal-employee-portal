@@ -1,5 +1,5 @@
-import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react'
+import { defineConfig } from "vitest/config";
+import react from "@vitejs/plugin-react";
 
 // https://vite.dev/config/
 export default defineConfig({
@@ -10,4 +10,5 @@ export default defineConfig({
       "/healthz": "http://localhost:8000",
     },
   },
-})
+  test: { environment: "jsdom", include: ["src/**/*.test.js"] },
+});
