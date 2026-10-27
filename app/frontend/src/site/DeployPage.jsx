@@ -142,14 +142,6 @@ export function DeployPage() {
                 </span>
               ))}
             </pre>
-            {openStep && status !== "idle" && (
-              <p className="term-why">
-                {openStep.why}{" "}
-                <a href={`${REPO_URL}/blob/main/${openStep.file}`} target="_blank" rel="noreferrer">
-                  {openStep.file}
-                </a>
-              </p>
-            )}
           </div>
         </div>
 
@@ -157,6 +149,18 @@ export function DeployPage() {
           <div className="arch-frame">
             <ArchitectureDiagram stage={stage} current={current} label={`Architecture after ${stage} of ${STEPS.length} steps`} />
           </div>
+          {openStep && status !== "idle" && (
+            <div className="step-explain">
+              <p className="eyebrow">What this step does</p>
+              <p>{openStep.detail}</p>
+              <p className="how-airgap">
+                <strong>The air-gap angle.</strong> {openStep.airgap}
+              </p>
+              <a href={`${REPO_URL}/blob/main/${openStep.file}`} target="_blank" rel="noreferrer">
+                {openStep.file}
+              </a>
+            </div>
+          )}
           {status === "done" ? (
             <div className="live-card" role="status">
               <div>

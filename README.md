@@ -126,7 +126,7 @@ the route) — is documented in full, with a diagram, in
 
 ### 1. Static demo (nothing to install)
 
-Open the live demo link above: **Overview** (the architecture, everything running), **Watch it deploy** (a replay of the runbook that
+Open the live demo link above: **Overview** (the architecture, everything running, plus what an air gap is, why it matters, what breaks without internet and how this project fixes each, a request end to end, and a glossary), **Watch it deploy** (a replay of the runbook that
 lights the diagram step by step) and **Try the app** (the real interface on a simulator). Or build it yourself:
 
 ```bash
@@ -250,7 +250,7 @@ Package READMEs: [`app/backend`](app/backend/README.md), [`app/frontend`](app/fr
 
 - Backend: `cd app/backend && JWT_SECRET=x python -m pytest` (23 tests: auth, CRUD, validation, search escaping, pagination, SPA mounting).
 - Frontend unit tests: `cd app/frontend && npm test` (32 vitest tests: the simulator's contract, the seam in both modes, sorting, CSV, department colours, formatting) and `npm run lint`.
-- Browser tests: `npm run build:demo && npm run test:e2e` (or `BASE_URL=https://.../ npm run test:e2e` against a deployed site; 35 Playwright tests against the static demo: the overview, the deployment replay, every button and link in the portal, keyboard flows, dark mode, CSV download, no console errors, no horizontal overflow from 320 to 1280 px).
+- Browser tests: `npm run build:demo && npm run test:e2e` (or `BASE_URL=https://.../ npm run test:e2e` against a deployed site; 37 Playwright tests against the static demo: the overview and its explanations, the deployment replay, every button and link in the portal, keyboard flows, dark mode, CSV download, no console errors, no horizontal overflow from 320 to 1280 px).
 - CI ([`validate.yml`](.github/workflows/validate.yml)): `terraform fmt` + `validate`, `ansible-lint`, backend tests, frontend build + lint + unit tests + static demo build + the Playwright suite.
 
 ## Deployment notes
@@ -282,5 +282,6 @@ check the AWS Billing dashboard once after your first apply regardless.
   statements in this README about having run it end to end are the author's, and CI only checks Terraform/Ansible syntax and lint.
 - One admin user, no roles, no persisted audit trail (the Activity page is this tab's memory only). The JWT is stored in `localStorage`.
 - The UI loads the whole directory (API cap 1,000 rows) and does not paginate. Sorting and CSV export work on the rows loaded.
+- The database credential is created once per deploy and written to the service's env file; nothing in the repo renews it, so after its TTL (1 h default) Postgres stops accepting it and the app needs a redeploy or a longer TTL.
 - Vault's own listener has TLS disabled in this lab; the PKI root is self-signed.
 - The Docker one-command run uses SQLite and a documented local-only password.

@@ -4,10 +4,11 @@
 export const STEPS = [
   {
     id: 1,
+    detail: "Docker Compose starts a container registry, MinIO (an S3-compatible store that will hold Terraform's state), Gitea (internal Git hosting) and the first Vault cluster, vault-unseal. A bucket for Terraform state is created in MinIO.",
+    airgap: 'An isolated network cannot lean on public services, so the things a team normally rents from the internet (images, state storage, Git) are provided inside.',
     title: "Bring up the lab services",
     cmd: "infra/scripts/01-bring-up-services.sh",
     file: "infra/scripts/01-bring-up-services.sh",
-    why: "A registry, MinIO for Terraform state, Gitea and the vault-unseal cluster: the internal services an isolated enclave already has.",
     lines: [
       "==> Starting registry, minio, gitea, vault-unseal...",
       "==> Waiting for minio to report healthy...",
@@ -17,10 +18,11 @@ export const STEPS = [
   },
   {
     id: 2,
+    detail: 'vault-unseal is initialised and given a Transit encryption key. vault-main is configured to ask it to unwrap its own master key on every start, so it unseals itself. The script then turns on the PKI engine (an internal certificate authority) and AppRole (the machine login that Ansible will use).',
+    airgap: 'Vault normally needs people holding key shares, or a cloud KMS, after every restart. Neither fits an enclave, so one Vault unseals the other.',
     title: "Bootstrap both Vault clusters",
     cmd: "infra/scripts/02-bootstrap-vault.sh",
     file: "infra/scripts/02-bootstrap-vault.sh",
-    why: "vault-main unseals itself through vault-unseal's Transit key, so there is no manual unseal step, ever.",
     lines: [
       "==> Initializing the unseal cluster...",
       "==> Enabling transit and creating the autounseal key...",
@@ -34,10 +36,11 @@ export const STEPS = [
   },
   {
     id: 3,
+    detail: "Terraform runs from a local provider mirror and creates a VPC, a public subnet with the EC2 host, private subnets and an RDS Postgres instance. RDS has no route from your laptop, so the script opens an SSH tunnel through the EC2 host, points Vault's database engine at RDS through it, and sets a 1 hour default lifetime for the credentials Vault will hand out.",
+    airgap: "The host's outbound traffic is limited to the VPC and the database has no internet route, so the isolation is enforced by the network rather than by good intentions.",
     title: "Provision AWS with Terraform",
     cmd: "infra/scripts/03-terraform-apply.sh",
     file: "infra/scripts/03-terraform-apply.sh",
-    why: "A VPC, an EC2 host whose egress is limited to the VPC, and an RDS database in private subnets with no internet route. Vault then mints one-hour database credentials.",
     lines: [
       "==> terraform init (this should resolve from the local mirror only)",
       "==> terraform plan",
@@ -52,10 +55,11 @@ export const STEPS = [
   },
   {
     id: 4,
+    detail: 'k3d runs a small Kubernetes cluster on your laptop and the AWX operator installs AWX in it. The script joins that cluster to the Docker network Vault and Gitea live on, so jobs can reach them.',
+    airgap: "In an enclave, changes are usually run by a controller that records who ran what, not from someone's shell. AWX is the open-source stand-in for that.",
     title: "Stand up AWX",
     cmd: "infra/scripts/04-awx-up.sh",
     file: "infra/scripts/04-awx-up.sh",
-    why: "AWX is the open-source core of Red Hat's automation controller; it runs the same Ansible job a person could run by hand.",
     lines: [
       "==> Creating the k3d cluster...",
       "==> Installing the awx-operator...",
@@ -65,10 +69,11 @@ export const STEPS = [
   },
   {
     id: 5,
+    detail: "pip downloads every backend dependency as a wheel built for the target's Python version and platform, plus a modern pip. Vite builds the React app into static files.",
+    airgap: 'Everything that normally comes from the internet at install time is collected here, once, on a machine that has internet, and carried in as plain files.',
     title: "Build the artifacts",
     cmd: "infra/scripts/build-app.sh",
     file: "infra/scripts/build-app.sh",
-    why: "pip downloads the exact wheels for the target's Python and platform, and Vite builds the React bundle. Nothing is fetched on the target later.",
     lines: [
       "==> Building backend wheelhouse (targeting manylinux2014_x86_64, cp39)...",
       "==> Building frontend static bundle...",
@@ -77,10 +82,11 @@ export const STEPS = [
   },
   {
     id: 6,
+    detail: 'Ansible runs on the control node. It asks Vault for a database credential and a TLS certificate, then copies the code, wheelhouse and React bundle to the host, creates a virtualenv, installs with --no-index, writes the environment file and starts the systemd service.',
+    airgap: 'The host never talks to Vault. It only receives finished files, which is why its outbound traffic can stay locked down.',
     title: "Deploy with Ansible",
     cmd: "ansible-playbook infra/ansible/site.yml -e vault_role_id=… -e db_host=…",
     file: "infra/ansible/roles/portal/tasks/main.yml",
-    why: "On the control node, Ansible fetches a database credential and a certificate from Vault, copies everything to the host, installs from the wheelhouse only, and starts the service.",
     lines: [
       "TASK [portal : Fetch a short-lived database credential from Vault]",
       "TASK [portal : Issue a TLS certificate from the internal PKI for this host]",

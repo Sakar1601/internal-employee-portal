@@ -15,6 +15,30 @@ test.describe("overview", () => {
     await expect(page.getByRole("heading", { name: "Sign in" })).toBeVisible();
   });
 
+  test("explains the idea: air gap, why it matters, what breaks, how it works, request flow, glossary, limits", async ({ page }) => {
+    await page.goto("");
+    await expect(page.getByRole("heading", { name: "What is an air-gapped environment?" })).toBeAttached();
+    await expect(page.getByRole("heading", { name: "Isolation is cheap to describe and hard to live with" })).toBeAttached();
+    await expect(page.getByRole("heading", { name: "A true air gap" })).toBeAttached();
+    await expect(page.locator("#breaks [role=row]")).toHaveCount(8); // header + seven habits
+    await expect(page.locator("#how .how-list > li")).toHaveCount(6);
+    await expect(page.locator("#how .how-airgap")).toHaveCount(6);
+    await expect(page.locator("#runtime .flow-list li")).toHaveCount(6);
+    expect(await page.locator("#glossary dt").count()).toBeGreaterThanOrEqual(10);
+    await expect(page.locator("#limits")).toContainText("Nothing in the repo renews it");
+    await expect(page.locator("#limits")).toContainText("Not physically air-gapped");
+  });
+
+  test("the contents chips scroll to their sections", async ({ page }) => {
+    await page.goto("");
+    const chips = page.locator(".contents .chip");
+    await expect(chips).toHaveCount(7);
+    for (const [label, id] of [["What is an air gap?", "airgap"], ["Why it matters", "why"], ["What breaks, and the fix", "breaks"], ["How it works", "how"], ["A request, end to end", "runtime"], ["Glossary", "glossary"], ["Limits", "limits"]]) {
+      await page.getByRole("button", { name: label }).click();
+      await expect(page.locator(`#${id}`)).toBeInViewport();
+    }
+  });
+
   test("header: logo, all three tabs, GitHub link", async ({ page }) => {
     await page.goto("#/deploy");
     await page.getByRole("link", { name: "Employee Portal, overview" }).click();
@@ -36,7 +60,7 @@ test.describe("overview", () => {
     await page.locator(".facts").scrollIntoViewIfNeeded();
     await expect(page.locator(".facts dt").first()).toContainText("23");
     await expect(page.locator(".facts dt").nth(2)).toContainText(/\d+/);
-    for (let y = 0; y < 8000; y += 500) {
+    for (let y = 0; y < (await page.evaluate(() => document.documentElement.scrollHeight)); y += 500) {
       await page.evaluate((t) => window.scrollTo(0, t), y);
       await page.waitForTimeout(40);
     }
@@ -75,6 +99,8 @@ test.describe("watch it deploy", () => {
     await page.getByRole("button", { name: "Run deployment" }).click();
     await expect(page.locator(".step.is-running")).toHaveCount(1);
     await expect(page.locator(".term-log")).toContainText("Starting registry, minio, gitea, vault-unseal");
+    await expect(page.locator(".step-explain")).toContainText("What this step does");
+    await expect(page.locator(".step-explain")).toContainText("The air-gap angle");
     await expect(page.locator(".arch .node:not(.is-off)")).not.toHaveCount(0);
     await expect(page.getByRole("status")).toContainText("The portal is live", { timeout: 40_000 });
     await expect(page.locator(".step.is-done")).toHaveCount(6);
@@ -90,7 +116,7 @@ test.describe("watch it deploy", () => {
     await expect(page.getByRole("status")).toContainText("The portal is live");
     await page.getByRole("button", { name: /Bootstrap both Vault clusters/ }).click();
     await expect(page.locator(".term-log")).toContainText("auto-unseal confirmed");
-    await expect(page.locator(".term-why a")).toHaveAttribute("href", /02-bootstrap-vault\.sh$/);
+    await expect(page.locator(".step-explain a")).toHaveAttribute("href", /02-bootstrap-vault\.sh$/);
     await page.getByRole("button", { name: /Deploy with Ansible/ }).click();
     await expect(page.locator(".term-log")).toContainText("Enable and start the portal service");
     await page.getByRole("button", { name: "Reset" }).click();
@@ -115,7 +141,7 @@ for (const width of [320, 360, 390, 414, 768, 1024, 1280]) {
     await page.setViewportSize({ width, height: 900 });
     const overflow = () => page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
     await page.goto("");
-    for (let y = 0; y < 9000; y += 700) {
+    for (let y = 0; y < 20000; y += 700) {
       await page.evaluate((t) => window.scrollTo(0, t), y);
       await page.waitForTimeout(30);
     }
