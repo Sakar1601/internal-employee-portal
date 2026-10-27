@@ -27,8 +27,6 @@ infra/ansible/inventory/hosts.ini
 
 # Working notes / analysis artifacts, not project deliverables
 graphify-out/
-instructions.md
-REPORT.md
 infra/docs/superpowers/
 
 # Python
