@@ -3,8 +3,6 @@ import { useLocation } from "react-router-dom";
 import { api } from "../../api";
 import { tenureYears, pluralize } from "../../shared/lib/format";
 import { useToast } from "../../shared/ui/toast";
-import { usePageCommands } from "../../shared/ui/commands";
-import { toggleTheme } from "../../shared/lib/theme";
 import { EmployeeTable } from "./EmployeeTable";
 import { EmployeeForm } from "./EmployeeForm";
 import { ConfirmDelete } from "./ConfirmDelete";
@@ -143,18 +141,6 @@ export function DirectoryPage() {
     });
   }
 
-  const commands = useMemo(
-    () => [
-      { id: "add", group: "Actions", label: "Add employee", keywords: "new create", run: () => setAdding(true) },
-      { id: "export", group: "Actions", label: "Export visible rows as CSV", keywords: "download", run: exportCsv },
-      { id: "theme", group: "Actions", label: "Toggle dark mode", keywords: "theme light", run: toggleTheme },
-      ...all.map((e) => ({ id: `emp-${e.id}`, group: "People", label: e.name, hint: e.department, run: () => setEditing(e) })),
-    ],
-    // exportCsv reads the current rows, so it is rebuilt whenever they change.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [all, rows],
-  );
-  usePageCommands("directory", commands);
 
   return (
     <div className="page">
@@ -200,7 +186,7 @@ export function DirectoryPage() {
               <button className="btn" onClick={exportCsv} disabled={rows.length === 0}>
                 Export CSV
               </button>
-              <button className="btn btn-primary" data-tour="add" onClick={() => setAdding(true)}>
+              <button className="btn btn-primary" onClick={() => setAdding(true)}>
                 Add employee
               </button>
             </div>

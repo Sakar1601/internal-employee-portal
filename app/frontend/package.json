@@ -9,7 +9,7 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "test": "vitest run",
-    "build:demo": "VITE_DEMO=true vite build --base ./ --outDir dist-demo/app --emptyOutDir && vite build --config vite.landing.config.js",
+    "build:demo": "VITE_DEMO=true vite build --base ./ --outDir dist-demo --emptyOutDir",
     "test:e2e": "playwright test"
   },
   "dependencies": {

@@ -1,4 +1,4 @@
-/* Design tokens shared by the app and the landing page.
+/* Design tokens shared by the portal and the project site.
    Direction: a civil registry. Paper, ink, one verdigris signal, a stamp red for seals. */
 @import "@fontsource/instrument-serif/400.css";
 @import "@fontsource/instrument-serif/400-italic.css";
@@ -211,16 +211,6 @@ select {
   background: var(--ink);
   color: var(--paper);
   transform: rotate(-12deg);
-}
-kbd {
-  font-family: var(--font-mono);
-  font-size: 0.6875rem;
-  padding: 1px 6px;
-  border: 1px solid var(--rule-strong);
-  border-bottom-width: 2px;
-  border-radius: 4px;
-  background: var(--surface);
-  color: var(--ink-soft);
 }
 .btn[disabled] {
   opacity: 0.55;

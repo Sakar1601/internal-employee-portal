@@ -1,6 +1,6 @@
 import { parseDate } from "../../shared/lib/format";
 
-export const SORTS = {
+const SORTS = {
   name: (a, b) => a.name.localeCompare(b.name) || a.id - b.id,
   department: (a, b) => a.department.localeCompare(b.department) || a.name.localeCompare(b.name),
   start_date: (a, b) => parseDate(a.start_date) - parseDate(b.start_date) || a.name.localeCompare(b.name),

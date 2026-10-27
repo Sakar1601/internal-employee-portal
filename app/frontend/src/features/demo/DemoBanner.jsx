@@ -2,7 +2,7 @@ import { isDemo, resetDemoData, tokenStore } from "../../api";
 
 const REPO_URL = "https://github.com/Sakar1601/internal-employee-portal";
 
-export function DemoBanner({ onTour }) {
+export function DemoBanner() {
   if (!isDemo) return null;
   return (
     <div className="demo-banner" role="region" aria-label="Demo notice">
@@ -11,11 +11,6 @@ export function DemoBanner({ onTour }) {
         fictional.
       </p>
       <div className="demo-banner-actions">
-        {onTour && (
-          <button className="btn btn-quiet tour-cta" onClick={onTour}>
-            Take the tour
-          </button>
-        )}
         <button
           className="btn btn-quiet"
           onClick={() => {

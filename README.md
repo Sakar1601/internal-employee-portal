@@ -3,10 +3,10 @@
 ![Validate](https://github.com/Sakar1601/internal-employee-portal/actions/workflows/validate.yml/badge.svg)
 
 **Live demo (no install, simulated backend): https://sakar1601.github.io/internal-employee-portal/**
-(this link works once GitHub Pages is enabled for the repo, see [Deployment notes](#deployment-notes)).
+(deployed by [`pages.yml`](.github/workflows/pages.yml), see [Deployment notes](#deployment-notes)).
 Or run `docker compose up --build` and open http://localhost:8080.
 
-[![The landing page: headline on the left, the live clickable product embedded on the right](docs/images/landing-hero.png)](https://sakar1601.github.io/internal-employee-portal/)
+[![The overview page: headline and calls to action on the left, the architecture diagram with every part running on the right](docs/images/site-overview.png)](https://sakar1601.github.io/internal-employee-portal/)
 
 ## What it is
 
@@ -17,55 +17,55 @@ wheelhouse, and an app host that is network-blocked from the internet.
 It is one project telling two stories:
 
 - **The application**: a FastAPI backend with JWT auth and CRUD over an employee table, and a React frontend with a
-  department-coloured roster timeline, search, filter, sortable columns, add/edit/delete, CSV export, a Ctrl/Cmd+K
-  command palette, dark mode and a session Activity log. The demo adds a guided tour.
+  department-coloured roster timeline, search, filter, sortable columns, add/edit/delete, CSV export, dark mode and
+  a session Activity log.
 - **The platform underneath it**: Terraform (VPC, EC2, RDS), two HashiCorp Vault clusters that unseal each other, Ansible,
   and AWX. This is the point of the project; see [`infra/docs/architecture.md`](infra/docs/architecture.md).
 
 ## Screenshots
 
-All screenshots were captured by Playwright from the built static demo (`npm run build:demo`, then
-`node scripts/capture-screenshots.mjs`), so they show the **simulated backend with fictional people**.
+Captured by Playwright from the built static demo (`npm run build:demo`, then `node scripts/capture-screenshots.mjs`), so they show the
+**simulated backend with fictional people**. The last one is the real app, captured separately.
 
-### The working app
+### See the whole project, then watch it deploy
 
-![Directory view: summary numbers, a roster timeline with one tenure bar per person grouped by department, then the searchable table](docs/images/app-directory.png)
+![Architecture diagram: laptop services (registry, MinIO, Gitea, vault-unseal, vault-main, Terraform, build script, AWX) provisioning and deploying to an AWS public-subnet EC2 host and a private-subnet RDS database, every part lit](docs/images/architecture-diagram.png)
 
-*Directory: the roster timeline draws each person as a bar from their start date to today, grouped by department.*
+*The diagram shows everything running by default. Numbered lines: (1) Terraform provisions the VPC, EC2 host and RDS; (2) the wheelhouse and React bundle are copied to the host over SSH; (3) AWX runs the Ansible job over SSH; (4) vault-main issues the certificate and secrets, which Ansible copies over as files; (5) Vault's database engine mints one-hour Postgres credentials through an SSH tunnel.*
 
-### Every action says what happened
+![Watch it deploy, mid-run: step 2 of 6 is running, the first step is done, and only the parts those steps built are lit in the diagram](docs/images/deploy-running.png)
 
-![Before and after adding an employee: the filled-in form on the left, and on the right a toast reading "Added Grace Hopper", with the new person highlighted on the timeline](docs/images/interaction-before-after.png)
+*Watch it deploy replays the six runbook steps. The terminal lines are the scripts' own messages (simulated, nothing runs); the diagram lights up as each step finishes.*
 
-*Adding a person: the toast states the effect on the data (27 people across 6 departments) and links to the record.*
+![Watch it deploy, finished: all six steps done, the whole diagram lit, and a card saying the portal is live with an Open the app button](docs/images/deploy-complete.png)
 
-![The product just after adding an employee, with a toast and the new record highlighted in red on the timeline](docs/images/product-after-add.png)
+### Try the app
 
-### Keyboard first, and dark mode
+![Directory view: summary numbers, a roster timeline with one department-coloured tenure bar per person, then the searchable, sortable table](docs/images/app-directory.png)
 
-![Dark theme with the command palette open, listing people matching "an" with their departments](docs/images/app-dark-command-palette.png)
+*Directory: each person is a bar from their start date to today, coloured by department.*
 
-*Ctrl/Cmd+K jumps to any person or runs any action. The theme follows the OS and can be toggled; the choice is remembered.*
+![Before and after adding an employee: the filled-in form on the left, and on the right a toast reading "Added Grace Hopper" with the new person highlighted on the timeline](docs/images/interaction-before-after.png)
 
-### A guided tour (demo only)
+*Every action says what happened: the toast states the effect on the data (27 people across 6 departments) and links to the record.*
 
-![Guided tour: the search field is highlighted and a popover explains that search is a real, debounced API call](docs/images/guided-tour.png)
+![Dark theme of the directory](docs/images/app-dark.png)
 
-### Activity: the API calls behind the UI
+*Dark mode follows the OS and can be toggled; the choice is remembered.*
 
 ![Activity page with a POST /api/employees row expanded, showing the request and response JSON and a button to show the record](docs/images/app-activity-expanded.png)
 
-*Activity: each call the interface made, with request and response (passwords masked, tokens shortened).*
+*Activity: each API call the interface made, with request and response (passwords masked, tokens shortened).*
 
-### Architecture
+### The real app
 
-![Architecture diagram: laptop services (registry, MinIO, Gitea, vault-unseal, vault-main, Terraform, build script, AWX) provisioning and deploying to an AWS public-subnet EC2 host and a private-subnet RDS database, with a numbered legend](docs/images/architecture-diagram.png)
+![The real app running against the FastAPI backend with seeded sample records: the same interface without the demo banner or the project site](docs/images/real-app-docker.png)
 
-*On the landing page this diagram is animated and each deployment step highlights its part.*
+*The same React app built without `VITE_DEMO`, served by the real FastAPI backend on SQLite (seeded through its API). It has no demo banner and no project-site pages.*
 
 ### On a phone (390 px)
 
-![Three phone screens side by side: landing page, directory with the roster timeline, and the activity log](docs/images/mobile-three-pages.png)
+![Three phone screens side by side: the overview with the diagram below the headline, the finished deployment replay, and the directory](docs/images/mobile-three-pages.png)
 
 ## How it works
 
@@ -126,12 +126,13 @@ the route) — is documented in full, with a diagram, in
 
 ### 1. Static demo (nothing to install)
 
-Open the live demo link above. Or build it yourself:
+Open the live demo link above: **Overview** (the architecture, everything running), **Watch it deploy** (a replay of the runbook that
+lights the diagram step by step) and **Try the app** (the real interface on a simulator). Or build it yourself:
 
 ```bash
 cd app/frontend
 npm ci
-npm run build:demo        # landing page + simulated app in dist-demo/
+npm run build:demo        # the whole demo site in dist-demo/
 npx vite preview --outDir dist-demo
 ```
 
@@ -213,7 +214,7 @@ down without literally cutting the route).
 | `JWT_EXPIRE_MINUTES` | backend | `60` | Token lifetime |
 | `FRONTEND_DIST_PATH` | backend | `app/frontend/dist` | Built SPA to serve; skipped if the folder is missing |
 | `VITE_DEMO` | frontend build | unset | `true` swaps the API for the in-browser simulator (`npm run build:demo` sets it) |
-| `SITE_URL` | landing build | `./` | Absolute site URL used in Open Graph tags |
+| `SITE_URL` | frontend build | `/` | Absolute site URL used in the Open Graph tags |
 
 Example files for the infra side: [`infra/ansible/inventory/hosts.ini.example`](infra/ansible/inventory/hosts.ini.example),
 [`infra/terraform/.terraformrc.example`](infra/terraform/.terraformrc.example).
@@ -230,11 +231,11 @@ are literal; `limit` 1 to 1000, default 500), `POST /api/employees`, `GET|PUT|DE
 ```
 app/
   backend/            FastAPI: routers, models, schemas, auth, config, tests
-  frontend/           React + Vite app, plus landing/ (portfolio page) and scripts/
+  frontend/           React + Vite: the portal, and (demo build only) the project site; plus e2e/ and scripts/
     src/api/          the seam: index.js (transport switch), http.js, simulator.js, activity.js
-    src/features/     auth, directory, activity, demo (banner + guided tour)
-    src/shared/       ui (modal, toasts, palette, theme toggle), layout, lib
-    landing/          the portfolio page (plain HTML/CSS/JS)
+    src/features/     auth, directory, activity, demo (banner)
+    src/shared/       ui (modal, toasts, theme toggle), layout, lib
+    src/site/         demo-only project site: overview, deployment replay, architecture diagram
     e2e/              Playwright tests against the static demo build
 infra/                Terraform, Ansible, Vault, AWX, lab compose file, runbook scripts, docs
 docs/                 brand.md and images/ (README screenshots)
@@ -248,8 +249,8 @@ Package READMEs: [`app/backend`](app/backend/README.md), [`app/frontend`](app/fr
 ## Tests and CI
 
 - Backend: `cd app/backend && JWT_SECRET=x python -m pytest` (23 tests: auth, CRUD, validation, search escaping, pagination, SPA mounting).
-- Frontend unit tests: `cd app/frontend && npm test` (35 vitest tests: the simulator's contract, the seam in both modes, sorting, CSV, palette filtering, formatting) and `npm run lint`.
-- Browser tests: `npm run build:demo && npm run test:e2e` (or `BASE_URL=https://.../ npm run test:e2e` against a deployed site; 38 Playwright tests against the static demo: every button and link on the landing page and the app, keyboard flows, dark mode, the tour, CSV download, no console errors, no horizontal overflow from 320 to 1280 px).
+- Frontend unit tests: `cd app/frontend && npm test` (32 vitest tests: the simulator's contract, the seam in both modes, sorting, CSV, department colours, formatting) and `npm run lint`.
+- Browser tests: `npm run build:demo && npm run test:e2e` (or `BASE_URL=https://.../ npm run test:e2e` against a deployed site; 35 Playwright tests against the static demo: the overview, the deployment replay, every button and link in the portal, keyboard flows, dark mode, CSV download, no console errors, no horizontal overflow from 320 to 1280 px).
 - CI ([`validate.yml`](.github/workflows/validate.yml)): `terraform fmt` + `validate`, `ansible-lint`, backend tests, frontend build + lint + unit tests + static demo build + the Playwright suite.
 
 ## Deployment notes

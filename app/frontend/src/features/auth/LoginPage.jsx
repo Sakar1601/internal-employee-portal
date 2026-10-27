@@ -5,6 +5,7 @@ import { useAuth } from "./auth";
 import { DemoBanner } from "../demo/DemoBanner";
 import { LogoMark } from "../../shared/ui/Logo";
 import { ThemeToggle } from "../../shared/ui/ThemeToggle";
+import { paths } from "../../paths";
 
 export function LoginPage() {
   const [username, setUsername] = useState(isDemo ? DEMO_CREDENTIALS.username : "");
@@ -14,7 +15,7 @@ export function LoginPage() {
   const { token, login } = useAuth();
   const navigate = useNavigate();
 
-  if (token) return <Navigate to="/" replace />;
+  if (token) return <Navigate to={paths.home} replace />;
 
   async function handleSubmit(e) {
     e.preventDefault();
@@ -22,7 +23,7 @@ export function LoginPage() {
     setPending(true);
     try {
       await login(username, password);
-      navigate("/");
+      navigate(paths.home);
     } catch (err) {
       setError(err.status === 401 ? "Invalid username or password." : "Could not reach the server. Try again.");
       setPending(false);
@@ -33,9 +34,11 @@ export function LoginPage() {
     <>
       <DemoBanner />
       <main className="login-page">
-        <div className="login-theme">
-          <ThemeToggle />
-        </div>
+        {!isDemo && (
+          <div className="login-theme">
+            <ThemeToggle />
+          </div>
+        )}
         <section className="login-intro" aria-hidden="false">
           <LogoMark size={48} />
           <p className="eyebrow">People registry</p>

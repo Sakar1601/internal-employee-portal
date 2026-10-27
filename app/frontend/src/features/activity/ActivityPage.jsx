@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { clearActivity, useActivity } from "../../api/activity";
+import { paths } from "../../paths";
 
 function describe(entry) {
   const { method, path, status } = entry;
@@ -67,7 +68,7 @@ export function ActivityPage() {
           <h2>Nothing here yet.</h2>
           <p>
             {writesOnly ? "No changes have been made in this session." : "Make a change in the "}
-            {!writesOnly && <Link to="/">directory</Link>}
+            {!writesOnly && <Link to={paths.home}>directory</Link>}
             {!writesOnly && " and it will appear here."}
           </p>
         </div>
@@ -93,7 +94,7 @@ export function ActivityPage() {
                     <Json label="Request" value={entry.query && Object.values(entry.query).some(Boolean) ? { query: entry.query, body: entry.request } : entry.request} />
                     <Json label="Response" value={entry.response} />
                     {isWrite(entry) && id && entry.method !== "DELETE" && entry.status < 300 && (
-                      <Link className="btn" to="/" state={{ focusId: id }}>
+                      <Link className="btn" to={paths.home} state={{ focusId: id }}>
                         Show record #{id}
                       </Link>
                     )}

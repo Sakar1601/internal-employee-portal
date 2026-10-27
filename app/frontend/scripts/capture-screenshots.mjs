@@ -1,6 +1,8 @@
 // Captures the README screenshots from the real static demo build (dist-demo/), in a real browser.
-// Usage: npm run build:demo && node scripts/capture-screenshots.mjs
-// Output: ../../docs/images/*.png. Every image shows the simulated demo with fictional data.
+//   npm run build:demo && node scripts/capture-screenshots.mjs
+// Optionally also capture the REAL app (backend + SQLite in Docker, seeded through its API):
+//   docker compose up --build -d   (from the repo root)   then   REAL_URL=http://localhost:8080 node scripts/capture-screenshots.mjs
+// Output: ../../docs/images/*.png. Everything shown is fictional demo data.
 import { chromium } from "@playwright/test";
 import { preview } from "vite";
 import fs from "node:fs";
@@ -34,70 +36,72 @@ async function dismissToasts(page) {
   while ((await buttons.count()) > 0) await buttons.first().click();
 }
 
-async function signIn(page, hash = "") {
-  await page.goto(`${BASE}app/${hash}`);
-  await page.click("button[type=submit]");
+async function signInDemo(page, hash = "#/portal/login") {
+  await page.goto(`${BASE}${hash}`);
+  await page.getByRole("button", { name: "Sign in" }).click();
   await page.waitForSelector("table");
 }
 
-// 1. Landing hero with the product signed in and clickable
+// 1. Overview: the whole project, everything running
 {
   const page = await newPage(1440, 900);
   await page.goto(BASE);
-  const frame = page.frameLocator("iframe.browser-view");
-  await frame.locator("button[type=submit]").click();
-  await frame.locator("table").waitFor();
-  await frame.locator("body").evaluate(() => window.scrollTo(0, 0));
-  await page.mouse.move(5, 5);
   await settle(page);
-  await shot(page, "landing-hero.png");
+  await page.mouse.move(2, 2);
+  await shot(page, "site-overview.png");
+  // 2. The diagram on its own (header hidden so nothing overlaps it)
+  await page.addStyleTag({ content: ".site-header{display:none!important}" });
+  await page.locator(".hero-arch").screenshot({ path: path.join(out, "architecture-diagram.png") });
   await page.close();
 }
 
-// 3. Main working view
+// 3 + 4. Watch it deploy: mid-run, then complete
 {
   const page = await newPage(1440, 1000);
-  await signIn(page);
-  await page.mouse.move(5, 5);
+  await page.goto(`${BASE}#/deploy`);
+  await page.getByRole("button", { name: "Run deployment" }).click();
+  await page.waitForSelector(".step.is-done");
+  await page.locator(".step.is-running").waitFor();
+  await page.waitForTimeout(1500);
+  await page.mouse.move(2, 2);
+  await shot(page, "deploy-running.png");
+  await page.getByRole("button", { name: "Skip to the end" }).click();
+  await page.getByRole("status").waitFor();
+  await page.waitForTimeout(1200);
+  await shot(page, "deploy-complete.png");
+  await page.close();
+}
+
+// 5-8. The portal: directory, before/after of adding someone, dark theme, activity
+{
+  const page = await newPage(1440, 1000);
+  await signInDemo(page);
+  await page.mouse.move(2, 2);
   await settle(page);
   await shot(page, "app-directory.png");
 
-  // 7a/2. Before: add dialog filled in. After: toast, flashed bar and row.
   await page.click("text=Add employee");
-  await page.fill("dialog input >> nth=0", "Grace Hopper");
-  await page.fill("dialog input >> nth=1", "Engineering");
-  await page.fill("dialog input[type=date]", "2026-01-12");
+  await page.getByRole("dialog").getByLabel("Name").fill("Grace Hopper");
+  await page.getByRole("dialog").getByLabel("Department").fill("Engineering");
+  await page.getByRole("dialog").getByLabel("Start date").fill("2026-01-12");
   await page.waitForTimeout(500);
   await shot(page, "_before.png");
   await page.click("dialog button[type=submit]");
   await page.waitForSelector(".toast");
   await page.locator(".bar.is-flash").evaluate((el) => el.scrollIntoView({ block: "center" }));
-  await page.mouse.move(5, 5);
+  await page.mouse.move(2, 2);
   await page.waitForTimeout(1200);
-  await shot(page, "product-after-add.png");
+  await shot(page, "_after.png");
 
-  // 4a. Dark theme, with the command palette open
+  await dismissToasts(page);
   await page.evaluate(() => window.scrollTo(0, 0));
-  await dismissToasts(page);
   await page.getByRole("button", { name: "Dark mode" }).click();
-  await page.keyboard.press("Control+k");
-  await page.getByRole("combobox", { name: "Search commands" }).fill("an");
+  await page.mouse.move(2, 2);
   await page.waitForTimeout(600);
-  await shot(page, "app-dark-command-palette.png");
-  await page.keyboard.press("Escape");
-
-  // 4b. Guided tour (light theme again)
+  await shot(page, "app-dark.png");
   await page.getByRole("button", { name: "Dark mode" }).click();
-  await dismissToasts(page);
-  await page.getByRole("button", { name: "Take the tour" }).click();
-  await page.getByRole("button", { name: "Next" }).click();
-  await page.getByRole("button", { name: "Next" }).click();
-  await page.waitForTimeout(1200);
-  await shot(page, "guided-tour.png");
-  await page.getByRole("button", { name: "Skip tour" }).click();
 
-  // 4. Activity with a write expanded
-  await page.click("nav >> text=Activity");
+  await page.getByRole("link", { name: "Activity" }).click();
   await page.waitForSelector(".log-row");
   await page.locator(".method-POST").first().click();
   await page.waitForTimeout(900);
@@ -106,28 +110,12 @@ async function signIn(page, hash = "") {
   await page.close();
 }
 
-// 5. Architecture diagram, no sticky nav in the way
-{
-  const page = await newPage(1440, 900);
-  await page.goto(BASE);
-  await page.addStyleTag({ content: ".site-nav{display:none!important}" });
-  await page.click(".arch-all");
-  const frame = page.locator(".arch-frame");
-  await frame.scrollIntoViewIfNeeded();
-  await page.waitForTimeout(600);
-  // The diagram plus its numbered legend, on the section's own dark background.
-  const a = await frame.boundingBox();
-  const b = await page.locator(".arch-legend").boundingBox();
-  const y = await page.evaluate(() => window.scrollY);
-  await page.screenshot({ path: path.join(out, "architecture-diagram.png"), fullPage: true, clip: { x: a.x, y: a.y + y, width: a.width, height: b.y + b.height - a.y + 16 } });
-  await page.close();
-}
-
-// 6. Phone composite: landing, directory, activity at 390px
+// 9. Phone composite: overview, deploy (complete), portal directory
 {
   const files = [];
   const tmp = fs.mkdtempSync(path.join(os.tmpdir(), "phone-"));
   const grab = async (page, name) => {
+    await page.mouse.move(0, 0);
     const file = path.join(tmp, name);
     await page.screenshot({ path: file });
     files.push(file);
@@ -135,26 +123,53 @@ async function signIn(page, hash = "") {
   };
   let page = await newPage(390, 844);
   await page.goto(BASE);
-  await settle(page, 1500);
+  await settle(page, 2200);
   await grab(page, "a.png");
   page = await newPage(390, 844);
-  await signIn(page);
-  await page.mouse.move(0, 0);
-  await settle(page);
+  await page.goto(`${BASE}#/deploy`);
+  await page.getByRole("button", { name: "Run deployment" }).click();
+  await page.getByRole("button", { name: "Skip to the end" }).click();
+  await page.getByRole("status").waitFor();
+  await page.waitForTimeout(800);
   await grab(page, "b.png");
   page = await newPage(390, 844);
-  await signIn(page);
-  await page.click("nav >> text=Activity");
-  await page.waitForSelector(".log-row");
-  await page.locator(".log-summary").first().click();
-  await page.waitForTimeout(700);
+  await signInDemo(page);
+  await settle(page);
   await grab(page, "c.png");
-  await compose(files, ["Landing", "Directory", "Activity"], "mobile-three-pages.png", 390);
+  await compose(files, ["Overview", "Watch it deploy", "The app"], "mobile-three-pages.png", 390);
 }
 
-// 7. Before / after of the key interaction
-await compose([path.join(out, "_before.png"), path.join(out, "product-after-add.png")], ["Before: fill in the form", "After: toast and the new record highlighted on the timeline"], "interaction-before-after.png", 720);
+// 10. Before / after of the key interaction
+await compose([path.join(out, "_before.png"), path.join(out, "_after.png")], ["Before: fill in the form", "After: toast and the new record highlighted on the timeline"], "interaction-before-after.png", 720);
 fs.rmSync(path.join(out, "_before.png"));
+fs.rmSync(path.join(out, "_after.png"));
+
+// 11. The real app (Docker), if asked for
+if (process.env.REAL_URL) {
+  const page = await newPage(1440, 1000);
+  await page.goto(process.env.REAL_URL);
+  await page.getByLabel("Username").fill("admin");
+  await page.getByLabel("Password").fill("demo-password");
+  await page.getByRole("button", { name: "Sign in" }).click();
+  await page.waitForSelector(".empty-state, table");
+  const people = [
+    ["Amara Okafor", "Engineering", "2017-03-06"], ["Daniel Reyes", "Engineering", "2019-08-19"], ["Mei Lin Zhao", "Engineering", "2021-01-11"],
+    ["Hannah Cole", "Platform & Security", "2016-10-03"], ["Rafael Duarte", "Platform & Security", "2018-05-14"],
+    ["Ines Marchetti", "Finance", "2017-07-24"], ["Kwame Mensah", "Finance", "2019-11-04"], ["Leila Haddad", "People Ops", "2018-02-12"],
+  ];
+  await page.evaluate(async (list) => {
+    const token = localStorage.getItem("token");
+    for (const [name, department, start_date] of list) {
+      await fetch("/api/employees", { method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` }, body: JSON.stringify({ name, department, start_date }) });
+    }
+  }, people);
+  await page.reload();
+  await page.waitForSelector("tbody tr");
+  await page.mouse.move(2, 2);
+  await settle(page);
+  await shot(page, "real-app-docker.png");
+  await page.close();
+}
 
 async function compose(files, labels, name, cellWidth) {
   const page = await browser.newPage({ viewport: { width: 100, height: 100 } });

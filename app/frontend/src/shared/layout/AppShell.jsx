@@ -1,70 +1,45 @@
-import { useMemo, useState } from "react";
-import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
-import { isDemo, resetDemoData, tokenStore } from "../../api";
+import { NavLink, Outlet, useLocation } from "react-router-dom";
+import { isDemo } from "../../api";
+import { paths } from "../../paths";
 import { useAuth } from "../../features/auth/auth";
 import { DemoBanner } from "../../features/demo/DemoBanner";
-import { DemoTour } from "../../features/demo/DemoTour";
 import { Wordmark } from "../ui/Logo";
 import { ThemeToggle } from "../ui/ThemeToggle";
 import { ToastProvider } from "../ui/Toasts";
-import { CommandProvider } from "../ui/CommandPalette";
-import { useCommandPalette, usePageCommands } from "../ui/commands";
 
-function Chrome() {
+// The employee portal's frame. In the real app it is the whole header; in the demo site the
+// site header sits above it, so this only adds a slim tab bar for the portal's own pages.
+export function AppShell() {
   const { logout } = useAuth();
-  const navigate = useNavigate();
   const location = useLocation();
-  const { open } = useCommandPalette();
-  const [touring, setTouring] = useState(false);
 
-  const commands = useMemo(
-    () => [
-      { id: "go-dir", group: "Actions", label: "Go to Directory", keywords: "people home", run: () => navigate("/") },
-      { id: "go-act", group: "Actions", label: "Go to Activity", keywords: "log api requests", run: () => navigate("/activity") },
-      ...(isDemo
-        ? [
-            { id: "tour", group: "Actions", label: "Take the guided tour", keywords: "help demo", run: () => setTouring(true) },
-            {
-              id: "reset",
-              group: "Actions",
-              label: "Reset demo data",
-              keywords: "restore seed",
-              run: () => {
-                resetDemoData();
-                tokenStore.clear();
-                window.location.reload();
-              },
-            },
-          ]
-        : []),
-      { id: "logout", group: "Actions", label: "Log out", keywords: "sign out", run: logout },
-    ],
-    [navigate, logout],
+  const tabs = (
+    <nav aria-label="Portal" className="app-nav">
+      <NavLink to={paths.home} end>
+        Directory
+      </NavLink>
+      <NavLink to={paths.activity}>Activity</NavLink>
+    </nav>
   );
-  usePageCommands("shell", commands);
 
   return (
-    <>
-      <a className="skip-link" href="#main">
-        Skip to content
-      </a>
-      <DemoBanner onTour={() => setTouring(true)} />
-      <header className="app-header">
+    <ToastProvider>
+      {!isDemo && (
+        <a className="skip-link" href="#main">
+          Skip to content
+        </a>
+      )}
+      <DemoBanner />
+      <header className={`app-header${isDemo ? " is-subbar" : ""}`}>
         <div className="app-header-inner">
-          <NavLink to="/" className="brand" aria-label="Employee Portal, directory">
-            <Wordmark />
-          </NavLink>
-          <nav aria-label="Primary" className="app-nav">
-            <NavLink to="/" end>
-              Directory
+          {!isDemo && (
+            <NavLink to={paths.home} className="brand" aria-label="Employee Portal, directory">
+              <Wordmark />
             </NavLink>
-            <NavLink to="/activity">Activity</NavLink>
-          </nav>
-          <button type="button" className="palette-btn" data-tour="palette" onClick={open} aria-label="Open command palette">
-            <span>Jump to…</span>
-            <kbd>Ctrl K</kbd>
-          </button>
-          <ThemeToggle />
+          )}
+          {tabs}
+          <span className="header-spacer" />
+          {!isDemo && <ThemeToggle />}
           <button className="btn btn-quiet" onClick={logout}>
             Log out
           </button>
@@ -75,17 +50,6 @@ function Chrome() {
           <Outlet />
         </div>
       </main>
-      {touring && <DemoTour onClose={() => setTouring(false)} />}
-    </>
-  );
-}
-
-export function AppShell() {
-  return (
-    <ToastProvider>
-      <CommandProvider>
-        <Chrome />
-      </CommandProvider>
     </ToastProvider>
   );
 }

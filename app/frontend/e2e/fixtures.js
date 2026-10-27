@@ -14,7 +14,7 @@ export const test = base.extend({
 export { expect };
 
 export async function signIn(page) {
-  await page.goto("app/");
+  await page.goto("#/portal/login");
   await page.getByRole("button", { name: "Sign in" }).click();
   await expect(page.getByRole("heading", { name: "Directory" })).toBeVisible();
   await expect(page.locator("tbody tr").first()).toBeVisible();

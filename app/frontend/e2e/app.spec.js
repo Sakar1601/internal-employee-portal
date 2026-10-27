@@ -2,7 +2,7 @@ import { addPerson, expect, signIn, test } from "./fixtures";
 
 test.describe("sign in", () => {
   test("rejects a wrong password, then accepts the demo credentials", async ({ page }) => {
-    await page.goto("app/");
+    await page.goto("#/portal/login");
     await expect(page.getByText("Simulated demo.")).toBeVisible();
     await page.getByLabel("Password").fill("wrong");
     await page.getByRole("button", { name: "Sign in" }).click();
@@ -13,7 +13,7 @@ test.describe("sign in", () => {
   });
 
   test("a protected page redirects to sign in, and log out returns there", async ({ page }) => {
-    await page.goto("app/#/activity");
+    await page.goto("#/portal/activity");
     await expect(page.getByRole("heading", { name: "Sign in" })).toBeVisible();
     await signIn(page);
     await page.getByRole("button", { name: "Log out" }).click();
@@ -112,63 +112,6 @@ test.describe("directory", () => {
   });
 });
 
-test.describe("command palette", () => {
-  test.beforeEach(async ({ page }) => signIn(page));
-
-  test("opens with Ctrl+K, runs an action with Enter and closes with Escape", async ({ page }) => {
-    await page.keyboard.press("Control+k");
-    await page.getByRole("combobox", { name: "Search commands" }).fill("add");
-    await page.keyboard.press("Enter");
-    await expect(page.getByRole("heading", { name: "Add employee" })).toBeVisible();
-    await page.keyboard.press("Escape");
-    await page.keyboard.press("Control+k");
-    await expect(page.getByRole("listbox").getByRole("option").first()).toBeVisible();
-    await page.keyboard.press("Escape");
-    await expect(page.getByRole("combobox", { name: "Search commands" })).toHaveCount(0);
-  });
-
-  test("opens from the header button, jumps to a person and navigates", async ({ page }) => {
-    await page.getByRole("button", { name: "Open command palette" }).click();
-    await page.getByRole("combobox", { name: "Search commands" }).fill("hannah");
-    await page.getByRole("option", { name: /Hannah Cole/ }).click();
-    await expect(page.getByRole("dialog").getByLabel("Name")).toHaveValue("Hannah Cole");
-    await page.keyboard.press("Escape");
-    await page.keyboard.press("Control+k");
-    await page.getByRole("combobox", { name: "Search commands" }).fill("activity");
-    await page.keyboard.press("ArrowDown");
-    await page.keyboard.press("ArrowUp");
-    await page.keyboard.press("Enter");
-    await expect(page.getByRole("heading", { name: "Activity" })).toBeVisible();
-  });
-});
-
-test.describe("guided tour", () => {
-  test.beforeEach(async ({ page }) => signIn(page));
-
-  test("steps forward and back through every stop and finishes", async ({ page }) => {
-    await page.getByRole("button", { name: "Take the tour" }).click();
-    const tour = page.getByRole("dialog", { name: "Guided tour" });
-    await expect(tour).toContainText("Step 1 of 6");
-    await tour.getByRole("button", { name: "Next" }).click();
-    await expect(tour).toContainText("Step 2 of 6");
-    await tour.getByRole("button", { name: "Back" }).click();
-    await expect(tour).toContainText("Step 1 of 6");
-    for (let i = 0; i < 5; i += 1) await tour.getByRole("button", { name: "Next" }).click();
-    await expect(tour).toContainText("Step 6 of 6");
-    await tour.getByRole("button", { name: "Finish" }).click();
-    await expect(tour).toHaveCount(0);
-  });
-
-  test("can be skipped, or closed with Escape", async ({ page }) => {
-    await page.getByRole("button", { name: "Take the tour" }).click();
-    await page.getByRole("button", { name: "Skip tour" }).click();
-    await expect(page.getByRole("dialog", { name: "Guided tour" })).toHaveCount(0);
-    await page.getByRole("button", { name: "Take the tour" }).click();
-    await page.keyboard.press("Escape");
-    await expect(page.getByRole("dialog", { name: "Guided tour" })).toHaveCount(0);
-  });
-});
-
 test.describe("activity", () => {
   test("records calls, expands one, filters to changes, links back and clears", async ({ page }) => {
     await signIn(page);
@@ -209,7 +152,7 @@ test("reset demo data restores the seed people and returns to sign in", async ({
 });
 
 test("source link points at the repository", async ({ page }) => {
-  await page.goto("app/");
+  await page.goto("#/portal/login");
   await expect(page.getByRole("link", { name: "Source" })).toHaveAttribute("href", /github\.com\/Sakar1601\/internal-employee-portal/);
 });
 
@@ -217,12 +160,12 @@ for (const width of [320, 390, 768, 1280]) {
   test(`no horizontal overflow on any page at ${width}px`, async ({ page }) => {
     await page.setViewportSize({ width, height: 900 });
     const overflow = () => page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
-    await page.goto("app/");
+    await page.goto("#/portal/login");
     expect(await overflow()).toBeLessThanOrEqual(0);
     await signIn(page);
     await page.waitForTimeout(1500);
     expect(await overflow()).toBeLessThanOrEqual(0);
-    await page.goto("app/#/activity");
+    await page.goto("#/portal/activity");
     await page.locator(".log-summary").first().click();
     expect(await overflow()).toBeLessThanOrEqual(0);
   });

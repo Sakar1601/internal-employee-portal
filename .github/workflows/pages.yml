@@ -1,6 +1,6 @@
 name: Demo site
 
-# Builds the static, simulator-backed demo (landing page + app) on every push to main.
+# Builds the static, simulator-backed demo (project site + simulated portal) on every push to main.
 # It is only deployed to GitHub Pages once the repository variable ENABLE_PAGES is "true"
 # (Settings > Pages > Source: GitHub Actions, then Settings > Variables > ENABLE_PAGES).
 

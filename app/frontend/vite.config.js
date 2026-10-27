@@ -1,9 +1,12 @@
 import { defineConfig } from "vitest/config";
 import react from "@vitejs/plugin-react";
 
-// https://vite.dev/config/
+// SITE_URL feeds the absolute Open Graph URLs in index.html (set by the Pages workflow).
 export default defineConfig({
-  plugins: [react()],
+  plugins: [
+    react(),
+    { name: "site-url", transformIndexHtml: (html) => html.replaceAll("%SITE_URL%", process.env.SITE_URL ?? "/") },
+  ],
   server: {
     proxy: {
       "/api": "http://localhost:8000",
