@@ -249,7 +249,7 @@ Package READMEs: [`app/backend`](app/backend/README.md), [`app/frontend`](app/fr
 
 - Backend: `cd app/backend && JWT_SECRET=x python -m pytest` (23 tests: auth, CRUD, validation, search escaping, pagination, SPA mounting).
 - Frontend unit tests: `cd app/frontend && npm test` (35 vitest tests: the simulator's contract, the seam in both modes, sorting, CSV, palette filtering, formatting) and `npm run lint`.
-- Browser tests: `npm run build:demo && npm run test:e2e` (38 Playwright tests against the static demo: every button and link on the landing page and the app, keyboard flows, dark mode, the tour, CSV download, no console errors, no horizontal overflow from 320 to 1280 px).
+- Browser tests: `npm run build:demo && npm run test:e2e` (or `BASE_URL=https://.../ npm run test:e2e` against a deployed site; 38 Playwright tests against the static demo: every button and link on the landing page and the app, keyboard flows, dark mode, the tour, CSV download, no console errors, no horizontal overflow from 320 to 1280 px).
 - CI ([`validate.yml`](.github/workflows/validate.yml)): `terraform fmt` + `validate`, `ansible-lint`, backend tests, frontend build + lint + unit tests + static demo build + the Playwright suite.
 
 ## Deployment notes
