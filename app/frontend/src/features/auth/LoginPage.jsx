@@ -1,9 +1,10 @@
 import { useState } from "react";
 import { Navigate, useNavigate } from "react-router-dom";
-import { isDemo, DEMO_CREDENTIALS } from "../api";
-import { useAuth } from "../context/auth";
-import { DemoBanner } from "../components/DemoBanner";
-import { LogoMark } from "../components/Logo";
+import { isDemo, DEMO_CREDENTIALS } from "../../api";
+import { useAuth } from "./auth";
+import { DemoBanner } from "../demo/DemoBanner";
+import { LogoMark } from "../../shared/ui/Logo";
+import { ThemeToggle } from "../../shared/ui/ThemeToggle";
 
 export function LoginPage() {
   const [username, setUsername] = useState(isDemo ? DEMO_CREDENTIALS.username : "");
@@ -32,6 +33,9 @@ export function LoginPage() {
     <>
       <DemoBanner />
       <main className="login-page">
+        <div className="login-theme">
+          <ThemeToggle />
+        </div>
         <section className="login-intro" aria-hidden="false">
           <LogoMark size={48} />
           <p className="eyebrow">People registry</p>

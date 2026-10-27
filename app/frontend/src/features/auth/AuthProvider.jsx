@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { api, tokenStore, SESSION_EXPIRED_EVENT } from "../api";
+import { api, tokenStore, SESSION_EXPIRED_EVENT } from "../../api";
 import { AuthContext } from "./auth";
 
 export function AuthProvider({ children }) {

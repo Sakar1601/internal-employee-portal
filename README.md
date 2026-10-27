@@ -17,7 +17,8 @@ wheelhouse, and an app host that is network-blocked from the internet.
 It is one project telling two stories:
 
 - **The application**: a FastAPI backend with JWT auth and CRUD over an employee table, and a React frontend with a
-  roster timeline, search, department filter, add/edit/delete and a session Activity log.
+  department-coloured roster timeline, search, filter, sortable columns, add/edit/delete, CSV export, a Ctrl/Cmd+K
+  command palette, dark mode and a session Activity log. The demo adds a guided tour.
 - **The platform underneath it**: Terraform (VPC, EC2, RDS), two HashiCorp Vault clusters that unseal each other, Ansible,
   and AWX. This is the point of the project; see [`infra/docs/architecture.md`](infra/docs/architecture.md).
 
@@ -39,6 +40,16 @@ All screenshots were captured by Playwright from the built static demo (`npm run
 *Adding a person: the toast states the effect on the data (27 people across 6 departments) and links to the record.*
 
 ![The product just after adding an employee, with a toast and the new record highlighted in red on the timeline](docs/images/product-after-add.png)
+
+### Keyboard first, and dark mode
+
+![Dark theme with the command palette open, listing people matching "an" with their departments](docs/images/app-dark-command-palette.png)
+
+*Ctrl/Cmd+K jumps to any person or runs any action. The theme follows the OS and can be toggled; the choice is remembered.*
+
+### A guided tour (demo only)
+
+![Guided tour: the search field is highlighted and a popover explains that search is a real, debounced API call](docs/images/guided-tour.png)
 
 ### Activity: the API calls behind the UI
 
@@ -221,8 +232,10 @@ app/
   backend/            FastAPI: routers, models, schemas, auth, config, tests
   frontend/           React + Vite app, plus landing/ (portfolio page) and scripts/
     src/api/          the seam: index.js (transport switch), http.js, simulator.js, activity.js
-    src/components/   shared UI used by both the live app and the demo
+    src/features/     auth, directory, activity, demo (banner + guided tour)
+    src/shared/       ui (modal, toasts, palette, theme toggle), layout, lib
     landing/          the portfolio page (plain HTML/CSS/JS)
+    e2e/              Playwright tests against the static demo build
 infra/                Terraform, Ansible, Vault, AWX, lab compose file, runbook scripts, docs
 docs/                 brand.md and images/ (README screenshots)
 Dockerfile, compose.yaml   one-command local run
@@ -235,10 +248,9 @@ Package READMEs: [`app/backend`](app/backend/README.md), [`app/frontend`](app/fr
 ## Tests and CI
 
 - Backend: `cd app/backend && JWT_SECRET=x python -m pytest` (23 tests: auth, CRUD, validation, search escaping, pagination, SPA mounting).
-- Frontend: `cd app/frontend && npm test` (23 vitest tests: the simulator's contract, the seam in both modes, formatting) and `npm run lint`.
-- CI ([`validate.yml`](.github/workflows/validate.yml)): `terraform fmt` + `validate`, `ansible-lint`, backend tests, frontend build + lint + tests + static demo build.
-- The browser flows (sign in, add, edit, delete, search, keyboard, 320 to 1280 px overflow checks) were checked with Playwright scripts that are
-  not part of CI.
+- Frontend unit tests: `cd app/frontend && npm test` (35 vitest tests: the simulator's contract, the seam in both modes, sorting, CSV, palette filtering, formatting) and `npm run lint`.
+- Browser tests: `npm run build:demo && npm run test:e2e` (38 Playwright tests against the static demo: every button and link on the landing page and the app, keyboard flows, dark mode, the tour, CSV download, no console errors, no horizontal overflow from 320 to 1280 px).
+- CI ([`validate.yml`](.github/workflows/validate.yml)): `terraform fmt` + `validate`, `ansible-lint`, backend tests, frontend build + lint + unit tests + static demo build + the Playwright suite.
 
 ## Deployment notes
 
@@ -268,6 +280,6 @@ check the AWS Billing dashboard once after your first apply regardless.
 - The application and the simulator are covered by the tests above. The AWS/Vault/AWX deployment is documented and scripted; the
   statements in this README about having run it end to end are the author's, and CI only checks Terraform/Ansible syntax and lint.
 - One admin user, no roles, no persisted audit trail (the Activity page is this tab's memory only). The JWT is stored in `localStorage`.
-- The UI loads the whole directory (API cap 1,000 rows) and does not paginate.
+- The UI loads the whole directory (API cap 1,000 rows) and does not paginate. Sorting and CSV export work on the rows loaded.
 - Vault's own listener has TLS disabled in this lab; the PKI root is self-signed.
 - The Docker one-command run uses SQLite and a documented local-only password.

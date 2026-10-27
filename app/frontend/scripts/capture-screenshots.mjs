@@ -1,7 +1,7 @@
 // Captures the README screenshots from the real static demo build (dist-demo/), in a real browser.
 // Usage: npm run build:demo && node scripts/capture-screenshots.mjs
 // Output: ../../docs/images/*.png. Every image shows the simulated demo with fictional data.
-import { chromium } from "playwright";
+import { chromium } from "@playwright/test";
 import { preview } from "vite";
 import fs from "node:fs";
 import os from "node:os";
@@ -28,6 +28,11 @@ async function newPage(width, height) {
 }
 const shot = (page, name, opts = {}) => page.screenshot({ path: path.join(out, name), ...opts });
 const settle = (page, ms = 2800) => page.waitForTimeout(ms);
+
+async function dismissToasts(page) {
+  const buttons = page.getByRole("button", { name: "Dismiss notification" });
+  while ((await buttons.count()) > 0) await buttons.first().click();
+}
 
 async function signIn(page, hash = "") {
   await page.goto(`${BASE}app/${hash}`);
@@ -71,12 +76,32 @@ async function signIn(page, hash = "") {
   await page.waitForTimeout(1200);
   await shot(page, "product-after-add.png");
 
+  // 4a. Dark theme, with the command palette open
+  await page.evaluate(() => window.scrollTo(0, 0));
+  await dismissToasts(page);
+  await page.getByRole("button", { name: "Dark mode" }).click();
+  await page.keyboard.press("Control+k");
+  await page.getByRole("combobox", { name: "Search commands" }).fill("an");
+  await page.waitForTimeout(600);
+  await shot(page, "app-dark-command-palette.png");
+  await page.keyboard.press("Escape");
+
+  // 4b. Guided tour (light theme again)
+  await page.getByRole("button", { name: "Dark mode" }).click();
+  await dismissToasts(page);
+  await page.getByRole("button", { name: "Take the tour" }).click();
+  await page.getByRole("button", { name: "Next" }).click();
+  await page.getByRole("button", { name: "Next" }).click();
+  await page.waitForTimeout(1200);
+  await shot(page, "guided-tour.png");
+  await page.getByRole("button", { name: "Skip tour" }).click();
+
   // 4. Activity with a write expanded
   await page.click("nav >> text=Activity");
   await page.waitForSelector(".log-row");
   await page.locator(".method-POST").first().click();
   await page.waitForTimeout(900);
-  await page.evaluate(() => document.querySelectorAll(".toast").forEach((t) => t.remove()));
+  await dismissToasts(page);
   await shot(page, "app-activity-expanded.png");
   await page.close();
 }

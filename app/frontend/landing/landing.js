@@ -59,6 +59,16 @@ const panel = document.getElementById("step-panel");
 const controls = document.getElementById("arch-controls");
 const arch = document.getElementById("arch");
 let typer;
+let playTimer = null;
+let current = 0;
+const playBtn = document.getElementById("play");
+
+function stopPlay() {
+  clearInterval(playTimer);
+  playTimer = null;
+  playBtn.setAttribute("aria-pressed", "false");
+  playBtn.textContent = "Play walkthrough";
+}
 
 function el(tag, attrs = {}, text) {
   const node = document.createElement(tag);
@@ -76,6 +86,7 @@ function highlight(step) {
 }
 
 function select(index, focus = false) {
+  current = index;
   const step = STEPS[index];
   list.querySelectorAll("button").forEach((b, i) => {
     b.setAttribute("aria-selected", String(i === index));
@@ -89,7 +100,18 @@ function select(index, focus = false) {
   const term = el("pre", { class: "term", "aria-label": `Command: ${step.cmd}` });
   const out = el("code", { "aria-hidden": "true" });
   term.append(el("span", { class: "prompt", "aria-hidden": "true" }, "$ "), out);
-  panel.append(term);
+  const copy = el("button", { type: "button", class: "copy-btn" }, "Copy");
+  copy.addEventListener("click", async () => {
+    try {
+      await navigator.clipboard.writeText(step.cmd);
+      copy.textContent = "Copied";
+    } catch {
+      copy.textContent = "Press Ctrl+C";
+    }
+    setTimeout(() => (copy.textContent = "Copy"), 1600);
+  });
+  panel.append(el("div", { class: "term-wrap" }, ""));
+  panel.lastChild.append(term, copy);
   panel.append(el("p", { class: "proves" }, `Shows: ${step.proves}`));
   const link = el("a", { href: REPO + step.file }, step.file);
   panel.append(link);
@@ -110,7 +132,10 @@ STEPS.forEach((s, i) => {
   const li = el("li", { role: "presentation" });
   const b = el("button", { role: "tab", type: "button", "aria-selected": "false" });
   b.append(el("span", { class: "step-n" }, String(i + 1).padStart(2, "0")), el("span", {}, s.title));
-  b.addEventListener("click", () => select(i));
+  b.addEventListener("click", () => {
+    stopPlay();
+    select(i);
+  });
   b.addEventListener("keydown", (e) => {
     const next = { ArrowDown: i + 1, ArrowRight: i + 1, ArrowUp: i - 1, ArrowLeft: i - 1, Home: 0, End: STEPS.length - 1 }[e.key];
     if (next === undefined) return;
@@ -122,17 +147,28 @@ STEPS.forEach((s, i) => {
 
   const c = el("button", { type: "button", "aria-pressed": "false" }, `${i + 1}`);
   c.setAttribute("aria-label", `Highlight step ${i + 1}: ${s.title}`);
-  c.addEventListener("click", () => select(i));
+  c.addEventListener("click", () => {
+    stopPlay();
+    select(i);
+  });
   controls.append(c);
 });
 const all = el("button", { type: "button", class: "arch-all" }, "Show all");
 all.addEventListener("click", () => {
+  stopPlay();
   clearInterval(typer);
   controls.querySelectorAll("button").forEach((b) => b.setAttribute("aria-pressed", "false"));
   highlight(null);
 });
 controls.append(all);
 select(0);
+playBtn.addEventListener("click", () => {
+  if (playTimer) return stopPlay();
+  playBtn.setAttribute("aria-pressed", "true");
+  playBtn.textContent = "Pause";
+  select((current + 1) % STEPS.length);
+  playTimer = setInterval(() => select((current + 1) % STEPS.length), 4200);
+});
 
 // ---------- reveal + count-up ----------
 const io = new IntersectionObserver(
@@ -176,3 +212,99 @@ document.querySelectorAll("[data-count]").forEach((n) => {
   n.textContent = reduce ? n.dataset.count : "0";
   countIo.observe(n);
 });
+
+// ---------- hero headline: words rise in ----------
+const h1 = document.querySelector(".hero h1");
+if (h1 && !reduce) {
+  let n = 0;
+  const split = (node) => {
+    for (const child of [...node.childNodes]) {
+      if (child.nodeType === Node.TEXT_NODE) {
+        const frag = document.createDocumentFragment();
+        for (const part of child.textContent.split(/(\s+)/)) {
+          if (!part) continue;
+          if (/^\s+$/.test(part)) frag.append(part);
+          else frag.append(el("span", { class: "word", style: `--i:${n++}` }, part));
+        }
+        child.replaceWith(frag);
+      } else split(child);
+    }
+  };
+  split(h1);
+}
+
+// ---------- scroll progress + scrollspy ----------
+const bar = document.querySelector(".progress");
+let ticking = false;
+addEventListener(
+  "scroll",
+  () => {
+    if (ticking) return;
+    ticking = true;
+    requestAnimationFrame(() => {
+      const max = document.documentElement.scrollHeight - innerHeight;
+      bar.style.transform = `scaleX(${max > 0 ? scrollY / max : 0})`;
+      ticking = false;
+    });
+  },
+  { passive: true },
+);
+
+const links = [...document.querySelectorAll("#nav-links a")];
+const spy = new IntersectionObserver(
+  (entries) => {
+    for (const entry of entries) {
+      if (!entry.isIntersecting) continue;
+      links.forEach((a) => (a.getAttribute("href") === `#${entry.target.id}` ? a.setAttribute("aria-current", "true") : a.removeAttribute("aria-current")));
+    }
+  },
+  { rootMargin: "-45% 0px -50% 0px" },
+);
+document.querySelectorAll("main section[id]").forEach((sec) => spy.observe(sec));
+
+// ---------- theme toggle + mobile menu ----------
+const themeBtn = document.getElementById("theme");
+function syncTheme() {
+  themeBtn.setAttribute("aria-pressed", String(document.documentElement.dataset.theme === "dark"));
+}
+syncTheme();
+themeBtn.addEventListener("click", () => {
+  const next = document.documentElement.dataset.theme === "dark" ? "light" : "dark";
+  document.documentElement.dataset.theme = next;
+  try {
+    localStorage.setItem("theme", next);
+  } catch {
+    /* the choice lasts for this page only */
+  }
+  syncTheme();
+});
+
+const menu = document.getElementById("menu");
+const nav = document.getElementById("nav-links");
+function setMenu(open) {
+  menu.setAttribute("aria-expanded", String(open));
+  nav.classList.toggle("is-open", open);
+}
+menu.addEventListener("click", () => setMenu(menu.getAttribute("aria-expanded") !== "true"));
+nav.addEventListener("click", (e) => e.target.closest("a") && setMenu(false));
+addEventListener("keydown", (e) => e.key === "Escape" && setMenu(false));
+
+// ---------- architecture: data packets travel along each flow ----------
+if (!reduce) {
+  const NS = "http://www.w3.org/2000/svg";
+  arch.querySelectorAll("path.flow").forEach((path, i) => {
+    path.id = `flow-${i}`;
+    const dot = document.createElementNS(NS, "circle");
+    dot.setAttribute("r", "4.5");
+    dot.setAttribute("class", "packet");
+    const motion = document.createElementNS(NS, "animateMotion");
+    motion.setAttribute("dur", `${2.6 + (i % 3) * 0.5}s`);
+    motion.setAttribute("repeatCount", "indefinite");
+    motion.setAttribute("begin", `${(i * 0.37).toFixed(2)}s`);
+    const ref = document.createElementNS(NS, "mpath");
+    ref.setAttribute("href", `#flow-${i}`);
+    motion.append(ref);
+    dot.append(motion);
+    path.parentNode.append(dot);
+  });
+}

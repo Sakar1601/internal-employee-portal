@@ -1,17 +1,22 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useLocation } from "react-router-dom";
-import { api } from "../api";
-import { tenureYears, pluralize } from "../lib/format";
-import { EmployeeTable } from "../components/EmployeeTable";
-import { EmployeeForm } from "../components/EmployeeForm";
-import { ConfirmDelete } from "../components/ConfirmDelete";
-import { RosterTimeline } from "../components/RosterTimeline";
-import { Stat } from "../components/Stat";
-import { useToast } from "../components/toast";
+import { api } from "../../api";
+import { tenureYears, pluralize } from "../../shared/lib/format";
+import { useToast } from "../../shared/ui/toast";
+import { usePageCommands } from "../../shared/ui/commands";
+import { toggleTheme } from "../../shared/lib/theme";
+import { EmployeeTable } from "./EmployeeTable";
+import { EmployeeForm } from "./EmployeeForm";
+import { ConfirmDelete } from "./ConfirmDelete";
+import { RosterTimeline } from "./RosterTimeline";
+import { Stat } from "./Stat";
+import { sortEmployees } from "./sort";
+import { downloadCsv, employeesToCsv } from "./csv";
 
 const FLASH_MS = 2600;
+const LEAVE_MS = 280;
 
-export function EmployeesPage() {
+export function DirectoryPage() {
   const [all, setAll] = useState([]);
   const [visible, setVisible] = useState([]);
   const [status, setStatus] = useState("loading");
@@ -21,6 +26,8 @@ export function EmployeesPage() {
   const [adding, setAdding] = useState(false);
   const [deleting, setDeleting] = useState(null);
   const [flashId, setFlashId] = useState(null);
+  const [leavingId, setLeavingId] = useState(null);
+  const [sort, setSort] = useState({ key: "name", dir: "asc" });
   const toast = useToast();
   const location = useLocation();
   const filters = useRef({ search: "", department: "" });
@@ -85,6 +92,17 @@ export function EmployeesPage() {
     if (location.state?.focusId) reveal(location.state.focusId);
   }, [location.state, reveal]);
 
+  const rows = useMemo(() => sortEmployees(visible, sort.key, sort.dir), [visible, sort]);
+
+  function onSort(key) {
+    setSort((s) => (s.key === key ? { key, dir: s.dir === "asc" ? "desc" : "asc" } : { key, dir: "asc" }));
+  }
+
+  function exportCsv() {
+    downloadCsv("employees.csv", employeesToCsv(rows));
+    toast({ title: "Exported employees.csv", detail: `${pluralize(rows.length, "record")} in the order shown${filtered ? ", filters applied" : ""}.` });
+  }
+
   const departments = useMemo(() => [...new Set(all.map((e) => e.department))].sort(), [all]);
   const avgTenure = all.length ? all.reduce((sum, e) => sum + tenureYears(e.start_date), 0) / all.length : 0;
 
@@ -113,13 +131,30 @@ export function EmployeesPage() {
     const target = deleting;
     await api.deleteEmployee(target.id);
     setDeleting(null);
+    // Let the row slide out before the list reloads without it.
+    setLeavingId(target.id);
+    await new Promise((resolve) => setTimeout(resolve, LEAVE_MS));
     const everyone = await refresh();
+    setLeavingId(null);
     toast({
       tone: "warn",
       title: `Deleted ${target.name}`,
       detail: `Record #${target.id} is gone. The registry now holds ${everyone ? summary(everyone) : "one fewer person"}.`,
     });
   }
+
+  const commands = useMemo(
+    () => [
+      { id: "add", group: "Actions", label: "Add employee", keywords: "new create", run: () => setAdding(true) },
+      { id: "export", group: "Actions", label: "Export visible rows as CSV", keywords: "download", run: exportCsv },
+      { id: "theme", group: "Actions", label: "Toggle dark mode", keywords: "theme light", run: toggleTheme },
+      ...all.map((e) => ({ id: `emp-${e.id}`, group: "People", label: e.name, hint: e.department, run: () => setEditing(e) })),
+    ],
+    // exportCsv reads the current rows, so it is rebuilt whenever they change.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [all, rows],
+  );
+  usePageCommands("directory", commands);
 
   return (
     <div className="page">
@@ -145,7 +180,7 @@ export function EmployeesPage() {
         </div>
       ) : (
         <>
-          <RosterTimeline employees={visible} flashId={flashId} onSelect={setEditing} />
+          <RosterTimeline employees={rows} flashId={flashId} onSelect={setEditing} />
 
           <section className="workspace" aria-label="Employee records">
             <div className="toolbar">
@@ -162,13 +197,19 @@ export function EmployeesPage() {
                   ))}
                 </select>
               </label>
-              <button className="btn btn-primary" onClick={() => setAdding(true)}>
+              <button className="btn" onClick={exportCsv} disabled={rows.length === 0}>
+                Export CSV
+              </button>
+              <button className="btn btn-primary" data-tour="add" onClick={() => setAdding(true)}>
                 Add employee
               </button>
             </div>
             <EmployeeTable
-              employees={visible}
+              employees={rows}
               flashId={flashId}
+              leavingId={leavingId}
+              sort={sort}
+              onSort={onSort}
               loading={status === "loading"}
               filtered={filtered}
               onEdit={setEditing}

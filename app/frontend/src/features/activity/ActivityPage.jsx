@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { clearActivity, useActivity } from "../api/activity";
+import { clearActivity, useActivity } from "../../api/activity";
 
 function describe(entry) {
   const { method, path, status } = entry;

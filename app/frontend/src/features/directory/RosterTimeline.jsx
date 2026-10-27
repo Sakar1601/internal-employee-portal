@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
-import { formatDate, formatTenure, parseDate } from "../lib/format";
+import { formatDate, formatTenure, parseDate } from "../../shared/lib/format";
+import { deptStyle } from "../../shared/lib/departments";
 
 const DEFAULT_CAPTION = "Every bar runs from a start date to today. Select a bar to open the record.";
 
@@ -53,8 +54,9 @@ export function RosterTimeline({ employees, onSelect, flashId }) {
           ))}
         </div>
         {lanes.map(({ department, people }) => (
-          <div className="lane" key={department}>
+          <div className="lane" key={department} style={deptStyle(department)}>
             <h3 className="lane-label">
+              <i className="lane-dot" aria-hidden="true" />
               {department} <span>{people.length}</span>
             </h3>
             <ul className="lane-track">

@@ -22,6 +22,16 @@
   --stamp-wash: #f1d9d1;
   --ochre: #e6d28a;
   --focus: #1d4fd8;
+  --on-accent: #ffffff;
+  --on-stamp: #ffffff;
+  --invert-bg: #16140f;
+  --invert-fg: #f2eee4;
+  --invert-soft: #d9d4c6;
+  --banner-accent: #e6d28a;
+  --hard: #16140f;
+  --dept-s: 48%;
+  --dept-l: 34%;
+  color-scheme: light;
 
   --font-display: "Instrument Serif", "Iowan Old Style", Georgia, serif;
   --font-body: "Hanken Grotesk Variable", "Hanken Grotesk", system-ui, sans-serif;
@@ -31,6 +41,41 @@
   --measure: 1180px;
   --radius: 6px;
   --ease: cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+
+:root[data-theme="dark"] {
+  --paper: #14130f;
+  --surface: #1b1a15;
+  --sunken: #0f0e0b;
+  --ink: #efeadc;
+  --ink-soft: #cdc7b6;
+  --muted: #a39c88;
+  --rule: #2d2b23;
+  --rule-strong: #4b4637;
+  --accent: #6fc2ae;
+  --accent-deep: #94d8c6;
+  --accent-wash: #1d3a33;
+  --stamp: #ee8e74;
+  --stamp-wash: #3b2018;
+  --ochre: #5a4e16;
+  --focus: #8fb0ff;
+  --on-accent: #0b1f1a;
+  --on-stamp: #1a0d08;
+  --invert-bg: #2a2820;
+  --invert-fg: #efeadc;
+  --invert-soft: #c4bea9;
+  --banner-accent: #e6d28a;
+  --hard: #000000;
+  --dept-s: 52%;
+  --dept-l: 66%;
+  color-scheme: dark;
+}
+
+/* --h is set per element (see shared/lib/departments.js); resolve the colour where it is set. */
+.lane,
+.dept-tag,
+.bar {
+  --dept: hsl(var(--h, 165) var(--dept-s) var(--dept-l));
 }
 
 *,
@@ -129,12 +174,12 @@ select {
 .btn-primary {
   background: var(--accent);
   border-color: var(--accent);
-  color: #fff;
+  color: var(--on-accent);
 }
 .btn-primary:hover {
   background: var(--accent-deep);
   border-color: var(--accent-deep);
-  color: #fff;
+  color: var(--on-accent);
 }
 .btn-danger {
   border-color: var(--stamp);
@@ -143,13 +188,39 @@ select {
 .btn-danger:hover {
   background: var(--stamp);
   border-color: var(--stamp);
-  color: #fff;
+  color: var(--on-stamp);
 }
 .btn-quiet {
   border-color: transparent;
   padding: 0 10px;
   text-decoration: underline;
   text-underline-offset: 3px;
+}
+.icon-btn {
+  display: inline-grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  background: transparent;
+  border: 1px solid var(--rule-strong);
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, transform 0.2s var(--ease);
+}
+.icon-btn:hover {
+  background: var(--ink);
+  color: var(--paper);
+  transform: rotate(-12deg);
+}
+kbd {
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  padding: 1px 6px;
+  border: 1px solid var(--rule-strong);
+  border-bottom-width: 2px;
+  border-radius: 4px;
+  background: var(--surface);
+  color: var(--ink-soft);
 }
 .btn[disabled] {
   opacity: 0.55;

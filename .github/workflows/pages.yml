@@ -40,8 +40,11 @@ jobs:
       # Open Graph URLs.
       - name: Build demo
         env:
-          SITE_URL: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/
-        run: npm run build:demo
+          OWNER: ${{ github.repository_owner }}
+          REPO: ${{ github.event.repository.name }}
+        run: |
+          export SITE_URL="https://$(echo "$OWNER" | tr '[:upper:]' '[:lower:]').github.io/$REPO/"
+          npm run build:demo
 
       - uses: actions/upload-pages-artifact@v3
         with:

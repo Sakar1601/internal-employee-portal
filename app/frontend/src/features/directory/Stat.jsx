@@ -1,4 +1,4 @@
-import { useTween } from "../lib/useTween";
+import { useTween } from "../../shared/lib/useTween";
 
 export function Stat({ value, label, decimals = 0, suffix = "" }) {
   const shown = useTween(value);

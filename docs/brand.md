@@ -23,6 +23,9 @@ The middle rule is drawn in the signal colour, the way a record is flagged after
 | `#6fc2ae` | | The flagged rule in the mark, on dark grounds |
 | `--stamp` | `#a63a22` | Destructive actions, "just changed" marker |
 
+A dark theme redefines the same tokens (`:root[data-theme="dark"]`). Department colours are not brand colours: each
+department gets a stable hue from `shared/lib/departments.js`, rendered with theme-aware saturation and lightness.
+
 The tokens live in [`app/frontend/src/styles/tokens.css`](../app/frontend/src/styles/tokens.css) and are shared by the app and
 the landing page.
 

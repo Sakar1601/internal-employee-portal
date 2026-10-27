@@ -1,7 +1,7 @@
 // Renders the raster brand assets from the SVG mark and the project fonts:
 //   public/apple-touch-icon.png (180x180), public/og.png (1200x630), docs/images/banner.png (1600x420)
 // Usage: node scripts/make-brand.mjs   (needs Playwright's Chromium)
-import { chromium } from "playwright";
+import { chromium } from "@playwright/test";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import path from "node:path";
 

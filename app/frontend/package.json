@@ -9,7 +9,8 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "test": "vitest run",
-    "build:demo": "VITE_DEMO=true vite build --base ./ --outDir dist-demo/app --emptyOutDir && vite build --config vite.landing.config.js"
+    "build:demo": "VITE_DEMO=true vite build --base ./ --outDir dist-demo/app --emptyOutDir && vite build --config vite.landing.config.js",
+    "test:e2e": "playwright test"
   },
   "dependencies": {
     "@fontsource-variable/hanken-grotesk": "^5.3.0",
@@ -21,13 +22,13 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.25.0",
+    "@playwright/test": "^1.64.1",
     "@vitejs/plugin-react": "^4.4.1",
     "eslint": "^9.25.0",
     "eslint-plugin-react-hooks": "^5.2.0",
     "eslint-plugin-react-refresh": "^0.4.19",
     "globals": "^16.0.0",
     "jsdom": "^29.1.1",
-    "playwright": "^1.64.1",
     "vite": "^6.3.5",
     "vitest": "^3.2.7"
   }

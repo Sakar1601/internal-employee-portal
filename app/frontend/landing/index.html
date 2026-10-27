@@ -3,6 +3,15 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script>
+      (function () {
+        try {
+          var t = localStorage.getItem("theme");
+          if (t !== "dark" && t !== "light") t = matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+          document.documentElement.dataset.theme = t;
+        } catch (e) {}
+      })();
+    </script>
     <title>Employee Portal: a directory deployed like a regulated enterprise would</title>
     <meta name="description" content="A small employee directory (FastAPI + React) deployed with Terraform, Vault, Ansible and AWX onto a host that cannot reach the internet. Try the simulated demo in your browser." />
     <meta property="og:type" content="website" />
@@ -19,20 +28,27 @@
   </head>
   <body>
     <a class="skip-link" href="#hero">Skip to content</a>
+    <div class="progress" aria-hidden="true"></div>
     <header class="site-nav">
       <div class="wrap nav-inner">
         <a class="brand" href="#hero" aria-label="Employee Portal, top">
           <svg width="30" height="30" viewBox="0 0 32 32" aria-hidden="true"><use href="#mark" /></svg>
           <span>Employee <em>Portal</em></span>
         </a>
-        <nav aria-label="Sections">
+        <nav aria-label="Sections" id="nav-links">
           <a href="#how">How it works</a>
           <a href="#different">What's different</a>
           <a href="#architecture">Architecture</a>
           <a href="#repo">The repo</a>
           <a href="#limits">Limits</a>
         </nav>
+        <button type="button" class="icon-btn" id="theme" aria-pressed="false" aria-label="Dark mode" title="Toggle dark mode">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M20.5 14.5A8.5 8.5 0 0 1 9.5 3.5a8.5 8.5 0 1 0 11 11z" /></svg>
+        </button>
         <a class="btn btn-primary nav-cta" href="#hero">Try the demo</a>
+        <button type="button" class="icon-btn menu-btn" id="menu" aria-expanded="false" aria-controls="nav-links" aria-label="Menu">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16" /></svg>
+        </button>
       </div>
     </header>
 
@@ -79,7 +95,8 @@
         <div class="wrap">
           <p class="eyebrow">How it works</p>
           <h2>Six steps from nothing to a running portal</h2>
-          <p class="section-lede">Select a step. The diagram further down lights up the parts it touches.</p>
+          <p class="section-lede">Select a step, or let it play. The diagram further down lights up the parts each one touches.</p>
+          <button type="button" class="btn play-btn" id="play" aria-pressed="false">Play walkthrough</button>
           <div class="steps">
             <ol class="step-list" role="tablist" aria-label="Deployment steps" aria-orientation="vertical"></ol>
             <div class="step-panel" id="step-panel" role="tabpanel" aria-live="polite" tabindex="0"></div>
@@ -87,6 +104,7 @@
         </div>
       </section>
 
+      <div class="wrap"><div class="tenure-rule" aria-hidden="true"><i></i><b></b></div></div>
       <section id="different" class="wrap section">
         <p class="eyebrow">What makes it different</p>
         <h2>Compared with the usual ways small apps get deployed</h2>
@@ -253,12 +271,14 @@
         </div>
       </section>
 
+      <div class="wrap"><div class="tenure-rule" aria-hidden="true"><i></i><b></b></div></div>
       <section id="repo" class="wrap section">
         <p class="eyebrow">Stack and what is in the repo</p>
         <h2>Numbers taken from the code</h2>
         <dl class="facts">
           <div><dt data-count="23">0</dt><dd>backend tests (pytest)</dd></div>
-          <div><dt data-count="23">0</dt><dd>frontend tests (vitest), including the simulator</dd></div>
+          <div><dt data-count="35">0</dt><dd>frontend unit tests (vitest), including the simulator</dd></div>
+          <div><dt data-count="38">0</dt><dd>browser tests (Playwright) that click every button</dd></div>
           <div><dt data-count="12">0</dt><dd>Terraform resources</dd></div>
           <div><dt data-count="5">0</dt><dd>Docker Compose services</dd></div>
           <div><dt data-count="21">0</dt><dd>Ansible tasks in one role</dd></div>
@@ -267,7 +287,7 @@
         <div class="stack">
           <div><h3>Application</h3><p>FastAPI, SQLAlchemy 2, PyJWT, bcrypt. React 19, Vite 6, React Router 6. Postgres in AWS, SQLite locally.</p></div>
           <div><h3>Platform</h3><p>Terraform (AWS: VPC, EC2, RDS), two HashiCorp Vault clusters, Ansible, AWX on k3d, MinIO for state, Gitea, a registry.</p></div>
-          <div><h3>Quality</h3><p>GitHub Actions: terraform fmt and validate, ansible-lint, backend tests, frontend lint, tests and build, static-demo build.</p></div>
+          <div><h3>Quality</h3><p>GitHub Actions: terraform fmt and validate, ansible-lint, backend tests, frontend lint, unit tests, static-demo build and the Playwright suite against it.</p></div>
         </div>
       </section>
 

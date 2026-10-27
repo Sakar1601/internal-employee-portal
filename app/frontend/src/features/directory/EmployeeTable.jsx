@@ -1,6 +1,27 @@
-import { formatDate, formatTenure } from "../lib/format";
+import { formatDate, formatTenure } from "../../shared/lib/format";
+import { deptStyle } from "../../shared/lib/departments";
 
-export function EmployeeTable({ employees, flashId, onEdit, onDelete, loading, filtered }) {
+const COLUMNS = [
+  { key: "name", label: "Name" },
+  { key: "department", label: "Department" },
+  { key: "start_date", label: "Start date" },
+  { key: "tenure", label: "Tenure" },
+];
+
+function SortHeader({ column, sort, onSort }) {
+  const active = sort.key === column.key;
+  const state = active ? (sort.dir === "asc" ? "ascending" : "descending") : "none";
+  return (
+    <th scope="col" aria-sort={state}>
+      <button type="button" className="sort-btn" onClick={() => onSort(column.key)}>
+        {column.label}
+        <span className={`sort-arrow${active ? ` is-${sort.dir}` : ""}`} aria-hidden="true" />
+      </button>
+    </th>
+  );
+}
+
+export function EmployeeTable({ employees, flashId, leavingId, sort, onSort, onEdit, onDelete, loading, filtered }) {
   if (loading && employees.length === 0) {
     return (
       <div className="skeleton-list" aria-busy="true" aria-label="Loading employees">
@@ -23,13 +44,12 @@ export function EmployeeTable({ employees, flashId, onEdit, onDelete, loading, f
   return (
     <div className={`table-frame${loading ? " is-refreshing" : ""}`}>
       <table>
-        <caption className="visually-hidden">Employee records</caption>
+        <caption className="visually-hidden">Employee records, sortable by column</caption>
         <thead>
           <tr>
-            <th scope="col">Name</th>
-            <th scope="col">Department</th>
-            <th scope="col">Start date</th>
-            <th scope="col">Tenure</th>
+            {COLUMNS.map((c) => (
+              <SortHeader key={c.key} column={c} sort={sort} onSort={onSort} />
+            ))}
             <th scope="col">
               <span className="visually-hidden">Actions</span>
             </th>
@@ -37,7 +57,12 @@ export function EmployeeTable({ employees, flashId, onEdit, onDelete, loading, f
         </thead>
         <tbody>
           {employees.map((emp, i) => (
-            <tr key={emp.id} id={`employee-${emp.id}`} className={flashId === emp.id ? "is-flash" : ""} style={{ "--i": Math.min(i, 14) }}>
+            <tr
+              key={emp.id}
+              id={`employee-${emp.id}`}
+              className={`${flashId === emp.id ? "is-flash" : ""} ${leavingId === emp.id ? "is-leaving" : ""}`.trim()}
+              style={{ "--i": Math.min(i, 14) }}
+            >
               <td data-label="Name">
                 <button className="name-link" onClick={() => onEdit(emp)}>
                   {emp.name}
@@ -45,7 +70,9 @@ export function EmployeeTable({ employees, flashId, onEdit, onDelete, loading, f
                 <span className="record-id">#{emp.id}</span>
               </td>
               <td data-label="Department">
-                <span className="dept-tag">{emp.department}</span>
+                <span className="dept-tag" style={deptStyle(emp.department)}>
+                  {emp.department}
+                </span>
               </td>
               <td data-label="Start date" className="mono">
                 {formatDate(emp.start_date)}

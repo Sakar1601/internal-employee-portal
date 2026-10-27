@@ -1,5 +1,5 @@
 import { useId, useState } from "react";
-import { Modal } from "./Modal";
+import { Modal } from "../../shared/ui/Modal";
 
 export function ConfirmDelete({ employee, onConfirm, onCancel }) {
   const titleId = useId();

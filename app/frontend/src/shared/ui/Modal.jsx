@@ -1,7 +1,7 @@
 import { useEffect, useRef } from "react";
 
 // Native <dialog>: gives us a focus trap, Escape to close and an inert background for free.
-export function Modal({ labelledBy, onClose, children }) {
+export function Modal({ labelledBy, onClose, className = "", children }) {
   const ref = useRef(null);
 
   useEffect(() => {
@@ -13,7 +13,7 @@ export function Modal({ labelledBy, onClose, children }) {
   return (
     <dialog
       ref={ref}
-      className="modal"
+      className={`modal ${className}`.trim()}
       aria-labelledby={labelledBy}
       onCancel={(e) => {
         e.preventDefault();

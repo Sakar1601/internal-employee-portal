@@ -104,3 +104,9 @@ jobs:
 
       - name: Static demo build
         run: npm run build:demo
+
+      - name: Install Playwright browser
+        run: npx playwright install --with-deps chromium
+
+      - name: Browser tests against the static demo
+        run: npm run test:e2e
