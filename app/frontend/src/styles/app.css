@@ -184,7 +184,7 @@
   height: 100%;
   pointer-events: none;
   font-family: var(--font-mono);
-  font-size: 0.6875rem;
+  font-size: 0.75rem;
   color: var(--muted);
 }
 .timeline-axis span {
@@ -231,14 +231,14 @@
 }
 .lane-track li {
   position: relative;
-  height: 22px;
+  height: 24px;
 }
 .bar {
   position: absolute;
   left: var(--x);
   right: 0;
   top: 0;
-  height: 22px;
+  height: 24px;
   display: flex;
   align-items: center;
   padding: 0;
@@ -390,7 +390,7 @@ th {
   text-align: left;
   padding: 12px 16px;
   font-family: var(--font-mono);
-  font-size: 0.6875rem;
+  font-size: 0.75rem;
   font-weight: 500;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -440,7 +440,7 @@ tr.is-flash {
 .record-id {
   margin-left: 8px;
   font-family: var(--font-mono);
-  font-size: 0.6875rem;
+  font-size: 0.75rem;
   color: var(--muted);
 }
 .dept-tag::before,
@@ -643,9 +643,9 @@ tr.is-flash {
   cursor: pointer;
 }
 .check input {
-  width: 20px;
-  min-height: 20px;
-  height: 20px;
+  width: 24px;
+  min-height: 24px;
+  height: 24px;
 }
 .log {
   list-style: none;
@@ -735,7 +735,7 @@ tr.is-flash {
 .log-detail h4 {
   margin: 0 0 6px;
   font-family: var(--font-mono);
-  font-size: 0.6875rem;
+  font-size: 0.75rem;
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--muted);
@@ -778,13 +778,7 @@ tr.is-flash {
   .bar-name {
     display: none;
   }
-  .lane-track li,
-  .bar {
-    height: 14px;
-  }
-  .lane-track li {
-    height: 14px;
-  }
+
   .log-summary {
     grid-template-columns: 64px 56px minmax(0, 1fr) 48px;
     row-gap: 4px;
@@ -848,7 +842,7 @@ tr.is-flash {
     content: attr(data-label);
     display: block;
     font-family: var(--font-mono);
-    font-size: 0.625rem;
+    font-size: 0.75rem;
     letter-spacing: 0.08em;
     text-transform: uppercase;
     color: var(--muted);
@@ -953,4 +947,10 @@ tr.is-leaving {
 .app-header.is-subbar .app-header-inner {
   padding-top: 0;
   padding-bottom: 0;
+}
+
+@media (max-height: 520px) {
+  .app-header {
+    position: static;
+  }
 }

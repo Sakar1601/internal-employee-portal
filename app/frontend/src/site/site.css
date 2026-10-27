@@ -37,14 +37,19 @@
   font-size: clamp(2.6rem, 5.4vw, 4.4rem);
   max-width: 15ch;
 }
+@media (min-width: 1060px) {
+  .hero h1 {
+    font-size: clamp(2.4rem, 3.9vw, 3.6rem);
+  }
+}
 .hero-arch {
   width: 100%;
   justify-self: stretch;
 }
 @media (min-width: 1060px) {
   .hero {
-    grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
-    column-gap: 40px;
+    grid-template-columns: minmax(0, 4fr) minmax(0, 8fr);
+    column-gap: 36px;
     align-items: center;
   }
 }
@@ -147,7 +152,7 @@
 }
 .compare-head {
   font-family: var(--font-mono);
-  font-size: 0.6875rem;
+  font-size: 0.75rem;
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--muted);
@@ -289,7 +294,7 @@ code {
 .arch .zone-label {
   fill: #a79f8a;
   font-family: var(--font-mono);
-  font-size: 12px;
+  font-size: 13px;
   letter-spacing: 0.08em;
 }
 .arch .node rect {
@@ -303,13 +308,13 @@ code {
 }
 .arch .node text {
   fill: #efeadc;
-  font-size: 15px;
+  font-size: 17px;
   font-weight: 700;
   text-anchor: middle;
 }
 .arch .node text.sub {
   fill: #b9b29d;
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 400;
 }
 .arch .node,
@@ -344,7 +349,7 @@ code {
 .arch .flow-label {
   fill: #cfc9b8;
   font-family: var(--font-mono);
-  font-size: 11px;
+  font-size: 14px;
 }
 .arch .badge {
   fill: #14130f;
@@ -354,7 +359,7 @@ code {
 .arch .badge-n {
   fill: #6fc2ae;
   font-family: var(--font-mono);
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 500;
   text-anchor: middle;
 }
@@ -580,13 +585,12 @@ code {
   color: var(--ink-soft);
 }
 
-@media (max-width: 960px) {
+@media (max-width: 1199px) {
   .deploy-grid {
     grid-template-columns: 1fr;
   }
   .deploy-right {
     position: static;
-    order: -1;
   }
 }
 @media (max-width: 900px) {
@@ -601,7 +605,7 @@ code {
     content: attr(data-label);
     display: block;
     font-family: var(--font-mono);
-    font-size: 0.6875rem;
+    font-size: 0.75rem;
     letter-spacing: 0.08em;
     text-transform: uppercase;
     color: var(--muted);
@@ -847,5 +851,129 @@ code {
 @media (max-width: 900px) {
   .compare-4 .compare-row {
     grid-template-columns: 1fr;
+  }
+}
+
+/* ---------- small screens ---------- */
+.arch-stack {
+  display: none;
+}
+@media (max-width: 719px) {
+  .arch {
+    display: none;
+  }
+  .arch-stack {
+    display: grid;
+    gap: 20px;
+    color: #efeadc;
+  }
+  .arch-stack h3 {
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    font-weight: 400;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #a79f8a;
+    margin-bottom: 8px;
+  }
+  .arch-stack ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 8px;
+  }
+  .stack-node {
+    display: grid;
+    gap: 2px;
+    padding: 10px 12px;
+    background: #26231b;
+    border: 1px solid #8d8670;
+    border-radius: 8px;
+    transition: opacity 0.5s, border-color 0.4s;
+  }
+  .stack-node.is-key {
+    border-color: #6fc2ae;
+  }
+  .stack-node span {
+    font-size: 0.8125rem;
+    color: #b9b29d;
+  }
+  .stack-node.is-current {
+    border-color: #f2eee4;
+    animation: node-pulse 1.1s ease-in-out infinite;
+  }
+  .stack-flow {
+    display: flex;
+    gap: 10px;
+    align-items: baseline;
+    font-size: 0.875rem;
+    color: #e2ddcd;
+    transition: opacity 0.5s;
+  }
+  .stack-flow b {
+    flex: none;
+    display: grid;
+    place-items: center;
+    width: 22px;
+    height: 22px;
+    border: 1.5px solid #6fc2ae;
+    border-radius: 50%;
+    color: #6fc2ae;
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    font-weight: 500;
+  }
+  .arch-stack .is-off {
+    opacity: 0.25;
+  }
+}
+
+/* links to files are tap targets too */
+.diff-list a,
+.how-list a,
+.step-explain a,
+.compare-4 a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+}
+@media (pointer: coarse) {
+  .diff-list a,
+  .how-list a,
+  .step-explain a,
+  .compare-4 a {
+    min-height: 40px;
+  }
+}
+.compare-head {
+  font-size: 0.75rem;
+}
+/* On a phone held sideways the sticky header would eat the screen. */
+@media (max-height: 520px) {
+  .site-header {
+    position: static;
+  }
+  .deploy-right {
+    position: static;
+  }
+}
+
+@media (min-width: 720px) and (max-width: 1199px) {
+  .deploy-right {
+    order: -1;
+  }
+}
+@media (max-width: 420px) {
+  .site-header .wordmark {
+    font-size: 1.2rem;
+    gap: 8px;
+  }
+  .site-header .wordmark svg {
+    width: 28px;
+    height: 28px;
+  }
+  .site-repo {
+    padding: 0 6px;
   }
 }

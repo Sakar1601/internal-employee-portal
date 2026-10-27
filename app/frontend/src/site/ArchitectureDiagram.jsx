@@ -9,21 +9,21 @@ const NODES = [
   { id: "vault", x: 320, y: 190, w: 200, h: 64, title: "vault-main", sub: "PKI · DB engine · AppRole", step: 2, key: true },
   { id: "tf", x: 40, y: 320, w: 150, h: 58, title: "Terraform", sub: "provider mirror", step: 3 },
   { id: "build", x: 205, y: 320, w: 150, h: 58, title: "build-app.sh", sub: "wheelhouse + dist", step: 5 },
-  { id: "awx", x: 370, y: 320, w: 150, h: 58, title: "AWX (k3d)", sub: "runs the Ansible job", step: 4 },
+  { id: "awx", x: 370, y: 320, w: 150, h: 58, title: "AWX (k3d)", sub: "runs Ansible jobs", step: 4 },
   { id: "browser", x: 664, y: 64, w: 296, h: 50, title: "Your browser", step: 6 },
   { id: "ec2", x: 664, y: 160, w: 296, h: 110, title: "EC2 · public subnet", sub: ["egress limited to the VPC", "FastAPI + React under systemd", "TLS cert from Vault PKI"], step: 3, key: true },
-  { id: "rds", x: 664, y: 400, w: 296, h: 110, title: "RDS Postgres · private subnets", sub: ["no internet-gateway route", "publicly_accessible = false"], step: 3, key: true },
+  { id: "rds", x: 664, y: 400, w: 296, h: 110, title: "RDS Postgres", sub: ["private subnets only", "no internet-gateway route", "publicly_accessible = false"], step: 3, key: true },
 ];
 
 const FLOWS = [
-  { id: "transit", d: "M210 222 H318", step: 2, label: { x: 264, y: 212, t: "transit", anchor: "middle" } },
+  { id: "transit", text: "vault-unseal unseals vault-main through Transit.", d: "M210 222 H318", step: 2, label: { x: 264, y: 212, t: "transit", anchor: "middle" } },
   { id: "f1", d: "M115 378 V528 H638", step: 3, badge: { x: 200, y: 528, n: 1 } },
   { id: "f2", d: "M280 378 V476 H596 V258 H662", step: 6, badge: { x: 400, y: 476, n: 2 } },
   { id: "f3", d: "M520 349 H576 V238 H662", step: 6, badge: { x: 576, y: 320, n: 3 } },
   { id: "f4", d: "M520 214 H556 V180 H662", step: 6, badge: { x: 556, y: 197, n: 4 } },
   { id: "f5", d: "M470 254 V290 H616 V440 H662", step: 3, badge: { x: 530, y: 290, n: 5 } },
-  { id: "db", d: "M812 270 V398", step: 6, label: { x: 824, y: 340, t: "5432, VPC only" } },
-  { id: "https", d: "M812 114 V158", step: 6, label: { x: 824, y: 140, t: "https :8443" } },
+  { id: "db", text: "EC2 talks to RDS on port 5432, inside the VPC only.", d: "M812 270 V398", step: 6, label: { x: 824, y: 340, t: "5432, VPC only" } },
+  { id: "https", text: "Your browser reaches EC2 over HTTPS on port 8443.", d: "M812 114 V158", step: 6, label: { x: 824, y: 140, t: "https :8443" } },
 ];
 
 const LEGEND = [
@@ -44,6 +44,7 @@ export function ArchitectureDiagram({ stage = "all", current = null, label = "Ar
   const motion = !reduced();
 
   return (
+    <>
     <svg className="arch" viewBox="0 0 1000 600" role="img" aria-label={label}>
       <title>{label}</title>
       <desc>
@@ -110,6 +111,52 @@ export function ArchitectureDiagram({ stage = "all", current = null, label = "Ar
         );
       })}
     </svg>
+    <ArchitectureStack stage={stage} current={current} />
+    </>
+  );
+}
+
+const ZONES = [
+  ["Your laptop · Docker + k3d", ["registry", "minio", "gitea", "unseal", "vault", "tf", "build", "awx"]],
+  ["AWS · free tier", ["browser", "ec2", "rds"]],
+];
+
+// Phones get this list instead of the drawing: the SVG scales down until its labels are unreadable.
+function ArchitectureStack({ stage, current }) {
+  const lit = (step) => stage === "all" || step <= stage;
+  const byId = Object.fromEntries(NODES.map((n) => [n.id, n]));
+  const flows = FLOWS.map((f) => ({ ...f, text: f.text ?? LEGEND[f.badge.n - 1] }));
+  return (
+    <div className="arch-stack">
+      {ZONES.map(([zone, ids]) => (
+        <section key={zone}>
+          <h3>{zone}</h3>
+          <ul>
+            {ids.map((id) => {
+              const n = byId[id];
+              const sub = Array.isArray(n.sub) ? n.sub.join(" · ") : n.sub;
+              return (
+                <li key={id} className={`stack-node${lit(n.step) ? "" : " is-off"}${current === n.step ? " is-current" : ""}${n.key ? " is-key" : ""}`}>
+                  <strong>{n.title}</strong>
+                  {sub && <span>{sub}</span>}
+                </li>
+              );
+            })}
+          </ul>
+        </section>
+      ))}
+      <section>
+        <h3>Connections</h3>
+        <ul>
+          {flows.map((f) => (
+            <li key={f.id} className={`stack-flow${lit(f.step) ? "" : " is-off"}`}>
+              {f.badge ? <b>{f.badge.n}</b> : <b aria-hidden="true">→</b>}
+              <span>{f.text}</span>
+            </li>
+          ))}
+        </ul>
+      </section>
+    </div>
   );
 }
 

@@ -38,7 +38,7 @@
   --font-mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
 
   --gutter: clamp(16px, 4vw, 40px);
-  --measure: 1180px;
+  --measure: min(1440px, max(1180px, 90vw));
   --radius: 6px;
   --ease: cubic-bezier(0.2, 0.7, 0.2, 1);
 }

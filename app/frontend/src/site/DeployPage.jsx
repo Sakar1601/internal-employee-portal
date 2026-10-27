@@ -110,6 +110,19 @@ export function DeployPage() {
         </div>
       </header>
 
+      {status === "done" && (
+        <div className="live-card" role="status">
+          <div>
+            <p className="eyebrow">Deployment complete (simulated)</p>
+            <h2>The portal is live.</h2>
+            <p>This is what the last step deployed. The app it serves is a second simulator, running in this tab.</p>
+          </div>
+          <Link className="btn btn-primary" to={paths.home}>
+            Open the app
+          </Link>
+        </div>
+      )}
+
       <div className="deploy-grid">
         <div className="deploy-left">
           <ol className="steps-list" aria-label="Deployment steps">
@@ -143,12 +156,6 @@ export function DeployPage() {
               ))}
             </pre>
           </div>
-        </div>
-
-        <div className="deploy-right">
-          <div className="arch-frame">
-            <ArchitectureDiagram stage={stage} current={current} label={`Architecture after ${stage} of ${STEPS.length} steps`} />
-          </div>
           {openStep && status !== "idle" && (
             <div className="step-explain">
               <p className="eyebrow">What this step does</p>
@@ -161,18 +168,13 @@ export function DeployPage() {
               </a>
             </div>
           )}
-          {status === "done" ? (
-            <div className="live-card" role="status">
-              <div>
-                <p className="eyebrow">Deployment complete (simulated)</p>
-                <h2>The portal is live.</h2>
-                <p>This is what the last step deployed. The app it serves is a second simulator, running in this tab.</p>
-              </div>
-              <Link className="btn btn-primary" to={paths.home}>
-                Open the app
-              </Link>
-            </div>
-          ) : (
+        </div>
+
+        <div className="deploy-right">
+          <div className="arch-frame">
+            <ArchitectureDiagram stage={stage} current={current} label={`Architecture after ${stage} of ${STEPS.length} steps`} />
+          </div>
+          {status !== "done" && (
             <p className="deploy-hint">{running ? `Step ${current} of ${STEPS.length} is running…` : "Nothing is deployed yet. Every part of the diagram is dimmed."}</p>
           )}
         </div>

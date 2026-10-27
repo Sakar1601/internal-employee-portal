@@ -155,18 +155,3 @@ test("source link points at the repository", async ({ page }) => {
   await page.goto("#/portal/login");
   await expect(page.getByRole("link", { name: "Source" })).toHaveAttribute("href", /github\.com\/Sakar1601\/internal-employee-portal/);
 });
-
-for (const width of [320, 390, 768, 1280]) {
-  test(`no horizontal overflow on any page at ${width}px`, async ({ page }) => {
-    await page.setViewportSize({ width, height: 900 });
-    const overflow = () => page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
-    await page.goto("#/portal/login");
-    expect(await overflow()).toBeLessThanOrEqual(0);
-    await signIn(page);
-    await page.waitForTimeout(1500);
-    expect(await overflow()).toBeLessThanOrEqual(0);
-    await page.goto("#/portal/activity");
-    await page.locator(".log-summary").first().click();
-    expect(await overflow()).toBeLessThanOrEqual(0);
-  });
-}

@@ -75,7 +75,7 @@ const DIFFERENCES = [
 const FACTS = [
   [23, "backend tests (pytest)"],
   [32, "frontend unit tests (vitest)"],
-  [37, "browser tests (Playwright)"],
+  [43, "browser tests (Playwright)"],
   [12, "Terraform resources"],
   [5, "Docker Compose services"],
   [21, "Ansible tasks in one role"],

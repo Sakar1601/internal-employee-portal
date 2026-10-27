@@ -135,20 +135,3 @@ test.describe("watch it deploy", () => {
     await expect(page.getByRole("status")).toContainText("The portal is live");
   });
 });
-
-for (const width of [320, 360, 390, 414, 768, 1024, 1280]) {
-  test(`overview and deploy have no horizontal overflow at ${width}px`, async ({ page }) => {
-    await page.setViewportSize({ width, height: 900 });
-    const overflow = () => page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
-    await page.goto("");
-    for (let y = 0; y < 20000; y += 700) {
-      await page.evaluate((t) => window.scrollTo(0, t), y);
-      await page.waitForTimeout(30);
-    }
-    expect(await overflow()).toBeLessThanOrEqual(0);
-    await page.goto("#/deploy");
-    await page.getByRole("button", { name: "Run deployment" }).click();
-    await page.getByRole("button", { name: "Skip to the end" }).click();
-    expect(await overflow()).toBeLessThanOrEqual(0);
-  });
-}

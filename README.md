@@ -65,6 +65,8 @@ Captured by Playwright from the built static demo (`npm run build:demo`, then `n
 
 ### On a phone (390 px)
 
+On screens narrower than 720 px the architecture diagram becomes a readable list (the drawing would shrink its labels to a few pixels), and it lights up the same way during the replay.
+
 ![Three phone screens side by side: the overview with the diagram below the headline, the finished deployment replay, and the directory](docs/images/mobile-three-pages.png)
 
 ## How it works
@@ -250,7 +252,7 @@ Package READMEs: [`app/backend`](app/backend/README.md), [`app/frontend`](app/fr
 
 - Backend: `cd app/backend && JWT_SECRET=x python -m pytest` (23 tests: auth, CRUD, validation, search escaping, pagination, SPA mounting).
 - Frontend unit tests: `cd app/frontend && npm test` (32 vitest tests: the simulator's contract, the seam in both modes, sorting, CSV, department colours, formatting) and `npm run lint`.
-- Browser tests: `npm run build:demo && npm run test:e2e` (or `BASE_URL=https://.../ npm run test:e2e` against a deployed site; 37 Playwright tests against the static demo: the overview and its explanations, the deployment replay, every button and link in the portal, keyboard flows, dark mode, CSV download, no console errors, no horizontal overflow from 320 to 1280 px).
+- Browser tests: `npm run build:demo && npm run test:e2e` (or `BASE_URL=https://.../ npm run test:e2e` against a deployed site; 43 Playwright tests against the static demo: the overview and its explanations, the deployment replay, every button and link in the portal, keyboard flows, dark mode, CSV download, no console errors; and on 14 screen sizes from 280 to 2560 px, including phones held sideways, no horizontal overflow, tap targets of at least 24 px and text of at least 11.5 px).
 - CI ([`validate.yml`](.github/workflows/validate.yml)): `terraform fmt` + `validate`, `ansible-lint`, backend tests, frontend build + lint + unit tests + static demo build + the Playwright suite.
 
 ## Deployment notes
