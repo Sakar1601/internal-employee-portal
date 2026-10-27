@@ -31,5 +31,7 @@
     "jsdom": "^29.1.1",
     "vite": "^6.3.5",
     "vitest": "^3.2.7"
-  }
+  },
+  "license": "MIT",
+  "author": "Sakar Joshi"
 }

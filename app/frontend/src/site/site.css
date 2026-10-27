@@ -257,13 +257,6 @@
   border-top: 1px solid var(--rule-strong);
   padding: 28px 0;
 }
-.placeholder {
-  padding: 1px 6px;
-  border: 1px dashed var(--stamp);
-  color: var(--stamp);
-  font-family: var(--font-mono);
-  font-size: 0.8125rem;
-}
 code {
   font-family: var(--font-mono);
   font-size: 0.875em;

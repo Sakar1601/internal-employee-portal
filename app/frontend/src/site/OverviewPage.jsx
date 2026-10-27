@@ -75,7 +75,7 @@ const DIFFERENCES = [
 const FACTS = [
   [23, "backend tests (pytest)"],
   [32, "frontend unit tests (vitest)"],
-  [43, "browser tests (Playwright)"],
+  [44, "browser tests (Playwright)"],
   [12, "Terraform resources"],
   [5, "Docker Compose services"],
   [21, "Ansible tasks in one role"],
@@ -377,8 +377,11 @@ export function OverviewPage() {
       <footer className="site-footer">
         <div className="wrap footer-inner">
           <p>
-            Built by <span className="placeholder">[Your name]</span> · <span className="placeholder">[LinkedIn URL]</span> ·{" "}
-            <span className="placeholder">[Email or contact link]</span>
+            Built by <strong>Sakar Joshi</strong> ·{" "}
+            <a href="https://www.linkedin.com/in/sakar-joshi/" target="_blank" rel="noreferrer">
+              LinkedIn
+            </a>{" "}
+            · <a href={`${REPO_URL}/blob/main/LICENSE`} target="_blank" rel="noreferrer">MIT License</a>, © 2026
           </p>
         </div>
       </footer>

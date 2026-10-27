@@ -252,7 +252,7 @@ Package READMEs: [`app/backend`](app/backend/README.md), [`app/frontend`](app/fr
 
 - Backend: `cd app/backend && JWT_SECRET=x python -m pytest` (23 tests: auth, CRUD, validation, search escaping, pagination, SPA mounting).
 - Frontend unit tests: `cd app/frontend && npm test` (32 vitest tests: the simulator's contract, the seam in both modes, sorting, CSV, department colours, formatting) and `npm run lint`.
-- Browser tests: `npm run build:demo && npm run test:e2e` (or `BASE_URL=https://.../ npm run test:e2e` against a deployed site; 43 Playwright tests against the static demo: the overview and its explanations, the deployment replay, every button and link in the portal, keyboard flows, dark mode, CSV download, no console errors; and on 14 screen sizes from 280 to 2560 px, including phones held sideways, no horizontal overflow, tap targets of at least 24 px and text of at least 11.5 px).
+- Browser tests: `npm run build:demo && npm run test:e2e` (or `BASE_URL=https://.../ npm run test:e2e` against a deployed site; 44 Playwright tests against the static demo: the overview and its explanations, the deployment replay, every button and link in the portal, keyboard flows, dark mode, CSV download, no console errors; and on 14 screen sizes from 280 to 2560 px, including phones held sideways, no horizontal overflow, tap targets of at least 24 px and text of at least 11.5 px).
 - CI ([`validate.yml`](.github/workflows/validate.yml)): `terraform fmt` + `validate`, `ansible-lint`, backend tests, frontend build + lint + unit tests + static demo build + the Playwright suite.
 
 ## Deployment notes
@@ -287,3 +287,7 @@ check the AWS Billing dashboard once after your first apply regardless.
 - The database credential is created once per deploy and written to the service's env file; nothing in the repo renews it, so after its TTL (1 h default) Postgres stops accepting it and the app needs a redeploy or a longer TTL.
 - Vault's own listener has TLS disabled in this lab; the PKI root is self-signed.
 - The Docker one-command run uses SQLite and a documented local-only password.
+
+## License
+
+[MIT](LICENSE), copyright 2026 Sakar Joshi. Built by [Sakar Joshi](https://www.linkedin.com/in/sakar-joshi/).

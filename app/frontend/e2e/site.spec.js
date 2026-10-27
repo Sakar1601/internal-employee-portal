@@ -55,6 +55,16 @@ test.describe("overview", () => {
     for (const h of hrefs) expect(h).toMatch(/^https:\/\/github\.com\/Sakar1601\/internal-employee-portal(\/blob\/main\/.+|\/tree\/main\/.+)?$/);
   });
 
+  test("footer credits the author with a working LinkedIn link and the license", async ({ page }) => {
+    await page.goto("");
+    const footer = page.locator(".site-footer");
+    await footer.scrollIntoViewIfNeeded();
+    await expect(footer).toContainText("Sakar Joshi");
+    await expect(footer.getByRole("link", { name: "LinkedIn" })).toHaveAttribute("href", "https://www.linkedin.com/in/sakar-joshi/");
+    await expect(footer.getByRole("link", { name: "MIT License" })).toHaveAttribute("href", /\/blob\/main\/LICENSE$/);
+    await expect(page.locator(".placeholder")).toHaveCount(0);
+  });
+
   test("sections reveal as they scroll into view, and the counters land on the real numbers", async ({ page }) => {
     await page.goto("");
     await page.locator(".facts").scrollIntoViewIfNeeded();
