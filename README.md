@@ -1,6 +1,6 @@
 <p align="center"><img src="docs/images/banner.png" alt="Employee Portal: a small directory app, deployed like a regulated company would, with Terraform, Vault, Ansible and AWX" width="100%"></p>
 
-![Validate](https://github.com/Sakar1601/internal-employee-portal/actions/workflows/validate.yml/badge.svg)
+![Validate](https://github.com/Sakar1601/internal-employee-portal/actions/workflows/validate.yml/badge.svg) [![Live demo](https://img.shields.io/badge/demo-live-brightgreen)](https://sakar1601.github.io/internal-employee-portal/) ![License](https://img.shields.io/badge/license-MIT-blue)
 
 **Live demo (no install, simulated backend): https://sakar1601.github.io/internal-employee-portal/**
 (deployed by [`pages.yml`](.github/workflows/pages.yml), see [Deployment notes](#deployment-notes)).
@@ -291,3 +291,7 @@ check the AWS Billing dashboard once after your first apply regardless.
 ## License
 
 [MIT](LICENSE), copyright 2026 Sakar Joshi. Built by [Sakar Joshi](https://www.linkedin.com/in/sakar-joshi/).
+
+## Security
+
+See [SECURITY.md](SECURITY.md) for how to report a vulnerability. Never commit real credentials; use `.env.example` as the template for local configuration.
