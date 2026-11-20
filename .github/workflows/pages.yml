@@ -46,7 +46,7 @@ jobs:
           export SITE_URL="https://$(echo "$OWNER" | tr '[:upper:]' '[:lower:]').github.io/$REPO/"
           npm run build:demo
 
-      - uses: actions/upload-pages-artifact@v3
+      - uses: actions/upload-pages-artifact@v5
         with:
           path: app/frontend/dist-demo
 
