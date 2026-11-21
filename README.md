@@ -295,3 +295,5 @@ check the AWS Billing dashboard once after your first apply regardless.
 ## Security
 
 See [SECURITY.md](SECURITY.md) for how to report a vulnerability. Never commit real credentials; use `.env.example` as the template for local configuration.
+
+**Known dependency exceptions.** The app host is built for Python 3.9 (see *What's real vs. what's simplified*). The patched releases of `python-multipart` and `pytest` require Python 3.10 or newer, so those two stay on their latest 3.9-compatible versions and Dependabot keeps reporting them. Moving the target host to a supported Python (3.9 is end-of-life) would clear them. Everything else, including PyJWT, is current.
