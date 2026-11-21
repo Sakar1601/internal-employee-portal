@@ -1,7 +1,7 @@
 import os
 
 os.environ.setdefault("DATABASE_URL", "sqlite:///:memory:")
-os.environ.setdefault("JWT_SECRET", "test-secret-not-for-prod")
+os.environ.setdefault("JWT_SECRET", "test-secret-not-for-prod-0123456789abcdef")
 os.environ.setdefault("ADMIN_USERNAME", "admin")
 os.environ.setdefault("ADMIN_PASSWORD_HASH", "placeholder-overridden-per-test")
 
